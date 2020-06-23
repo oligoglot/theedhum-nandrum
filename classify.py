@@ -12,7 +12,6 @@ documents = []
 f = sys.argv[1]
 with open(f) as inf:
     for line in inf:
-        print(line)
         (review, cat) = re.split('\t', line.strip())
         words = review.split()
         document = (list(words), cat)
@@ -21,11 +20,14 @@ random.shuffle(documents)
 
 # Define the feature extractor
 
+#TODO: generate word list from our training data in addition to imdb data
 all_words = nltk.FreqDist(w.lower() for w in movie_reviews.words())
 word_features = list(all_words)[:2000]
 
 def document_features(document):
     document_words = set(document)
+    # TODO: use bigrams in both training and testing
+    #document_bigrams = set(list(nltk.bigrams(document)))
     features = {}
     for word in word_features:
         features['contains({})'.format(word)] = (word in document_words)
