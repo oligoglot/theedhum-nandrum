@@ -20,9 +20,12 @@ random.shuffle(documents)
 
 # Define the feature extractor
 
-#TODO: generate word list from our training data in addition to imdb data
-all_words = nltk.FreqDist(w.lower() for w in movie_reviews.words())
-word_features = list(all_words)[:2000]
+imdb_words = nltk.FreqDist(w.lower() for w in movie_reviews.words())
+imdb_words = list(imdb_words)[:2000]
+training_words = nltk.FreqDist(w.lower() for d in documents for w in d[0])
+training_words = list(training_words)[:2000]
+all_words = imdb_words + training_words
+word_features = all_words
 
 def document_features(document):
     document_words = set(document)
