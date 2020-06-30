@@ -5,12 +5,14 @@ import random
 import sys
 import re
 
+nltk.download('movie_reviews')
 # documents = [(list(movie_reviews.words(fileid)), category)
 #               for category in movie_reviews.categories()
 #               for fileid in movie_reviews.fileids(category)]
 documents = []
-f = sys.argv[1]
-with open(f) as inf:
+#f = sys.argv[1] 
+f = "resources/data/tamil_train.tsv"
+with open(f, 'r', encoding='utf-8') as inf:
     for line in inf:
         (review, cat) = re.split('\t', line.strip())
         words = review.split()
