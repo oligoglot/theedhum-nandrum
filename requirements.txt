@@ -1,2 +1,3 @@
 nltk
 cld2-cffi
+emoji
