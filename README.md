@@ -1,4 +1,4 @@
-# theedhum-nandrum
+# theedhum-nandrum (தீதும் நன்றும்)
 A sentiment classifier on mixed language (and mixed script) reviews in Tamil, Malayalam and English
 
 ## Installation
