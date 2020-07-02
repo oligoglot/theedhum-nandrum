@@ -23,11 +23,10 @@ class EmojiHelper:
         pass
 
     # Given a document, this function extracts all the emojis  
-    def extractEmojis(self, document):
+    def extractEmojiTags(self, document):
         # Iterate over each of the tagged portions of the document to identify the emojis
         absolutePos = 0
         taggedIndex = 0
-        ret = []
         for tagged in document.get("tagged"):
             currCollection = []
             collection = []
@@ -71,6 +70,5 @@ class EmojiHelper:
             # TODO: Replace the current tagged position with jijiCollection and increment the taggedIndex.
             #print ("Collection is {}".format(collection))
             # TODO: Replace the current tagged Index with this collection
-            ret.append(collection)
             taggedIndex += 1
-        return ret
+        return collection

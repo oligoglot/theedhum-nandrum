@@ -1,25 +1,27 @@
 '''
 @author mojosaurus
-Tags emojis
+Tags languages
 '''
+
 import sys
 # Appeding our src directory to sys path so that we can import modules.
 sys.path.append('../../..') 
 from src.tn.document.document import Document
 from src.tn.docproc.pipeline import Tagger
-from src.tn.document.tnemoji import Emoji, EmojiHelper
+from src.tn.document.tnlanguage import LanguageHelper
+import cld2
 
-class EmojiTagger(Tagger):
+
+class LanguageTagger(Tagger):
     def __init__(self, document=Document()):
         self.document = document
-        self.helper = EmojiHelper()
+        self.helper = LanguageHelper()
         print ("Inside object of type : {}".format(self.__class__.__name__))
     
     # Replaces everything to lowercase, if it's latin alphabet.
     def execute(self):
         print ("Before processing : {} :  {}".format(self.__class__.__name__, self.document))
 
-        tagged = self.helper.extractEmojiTags(self.document)
+        tagged = self.helper.extractLanguageTags(self.document)
         self.document.set("tagged", tagged)
-        #self.document.set("text", self.document.get("text").lower())
         print ("After processing : {} :  {}".format(self.__class__.__name__, self.document))
