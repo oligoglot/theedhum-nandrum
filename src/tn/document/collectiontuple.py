@@ -16,7 +16,7 @@ class CollectionTuple:
         }
 
     def getJiji(self):
-        return [self.jiji]
+        return self.jiji
 
     def set(self, key, value):
         self.jiji[key] = value

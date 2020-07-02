@@ -19,6 +19,7 @@ class EmojiTagger(Tagger):
     def execute(self):
         print ("Before processing : {} :  {}".format(self.__class__.__name__, self.document))
         # 1. Identify the list of emojis
-        self.helper.extractEmojis(self.document)
+        tagged = self.helper.extractEmojis(self.document)
+        self.document.set("tagged", tagged)
         #self.document.set("text", self.document.get("text").lower())
         print ("After processing : {} :  {}".format(self.__class__.__name__, self.document))

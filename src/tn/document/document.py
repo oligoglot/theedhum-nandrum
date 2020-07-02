@@ -23,7 +23,7 @@ class Document:
 
     # Overload the __str__ function so that this can be used directly in print.
     def __str__(self):
-        return  json.dumps(self.js, indent=2)
+        return  json.dumps(self.js, indent=2, ensure_ascii=False)
 
 if __name__ == "__main__":
     doc = Document("Fellow world")
