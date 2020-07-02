@@ -16,6 +16,12 @@ A sentiment classifier on mixed language (and mixed script) reviews in Tamil, Ma
 * `source venv_tn/bin/activate`
 * `pip install -r requirements.txt `
 
+## How to run playground files
+* You need to activate the virtualenv
+    * `source venv_tn/script/activate`
+* `cd src/playground`
+* `python classify.py`
+
 # Steps
 ## Pre-processing
 ### Noise removal
