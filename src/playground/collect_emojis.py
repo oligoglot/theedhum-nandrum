@@ -1,3 +1,10 @@
+'''
+@author mojosaurus
+This script scrapes all the files under ../resources/data/*.tsv, collects emojis and checks which of these emojis do we
+have sentimant analysis for by src.tn.lib.sentimoji.
+
+Output of the script is two files - ../../resources/data/matched_emojis.txt and ../../resources/data/unmatched_emojis.txt
+'''
 import linecache
 import sys
 import emoji
