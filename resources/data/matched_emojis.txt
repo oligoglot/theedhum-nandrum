@@ -1,2 +1,9 @@
-🤩
-®
+🤩,unknown_state 
+🤩,Positive 
+🤩,Mixed_feelings 
+🤩,Negative 
+®,unknown_state 
+🤩,not-Tamil 
+🤩,not-malayalam 
+⏰,not-malayalam 
+↪,unknown_state 
