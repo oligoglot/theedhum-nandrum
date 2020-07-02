@@ -10,17 +10,20 @@ class Document:
     def __init__(self, text=""):
         self.js["original"] = text  # Keep the orignial text for reference
         self.js["text"] = text      # This is the filed that will be modified
+        self.js["tagged"] = [text]
 
     # Sets the value to key. Simple shit.
     def set(self, key, value):
         self.js[key] = value
+        if key == "text":
+            self.js["tagged"][0] = value
 
     def get(self, key):
         return self.js[key]
 
     # Overload the __str__ function so that this can be used directly in print.
     def __str__(self):
-        return  json.dumps(self.js, indent=1)
+        return  json.dumps(self.js, indent=2)
 
 if __name__ == "__main__":
     doc = Document("Fellow world")

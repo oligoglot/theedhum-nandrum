@@ -12,13 +12,15 @@ from src.tn.docproc.lowercase import Lowercase
 from src.tn.document.document import Document
 from src.tn.docproc.regexes import Regexes
 from src.tn.docproc.pipeline import Pipeline
+from src.tn.docproc.emojitagger import EmojiTagger
 
 if __name__ == "__main__":
-    text = "Hellooooo ####  !!!!!????? Cruellllll   Worrrrrld  "
+    text = "Hellooooo 🤘🤗 ####  !!!!!????? Cruellllll   Worrrrrld  "
     doc = Document(text)
     pipeline = Pipeline()
     
     pipeline.addStep(Whitespace())
     pipeline.addStep(Lowercase())
     pipeline.addStep(Regexes())
+    pipeline.addStep(EmojiTagger())
     pipeline.process(doc)
