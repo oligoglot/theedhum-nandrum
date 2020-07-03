@@ -18,7 +18,8 @@ class LanguageTagger(Tagger):
         self.helper = LanguageHelper()
         print ("Inside object of type : {}".format(self.__class__.__name__))
     
-    # Replaces everything to lowercase, if it's latin alphabet.
+    # Uses CLD2 library to identify and tags part of a multi-script sentence.
+    # TODO: Replace CLD2 with CLD3.
     def execute(self):
         print ("Before processing : {} :  {}".format(self.__class__.__name__, self.document))
         tagged = self.helper.extractLanguageTags(self.document)

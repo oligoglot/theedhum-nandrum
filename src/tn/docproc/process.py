@@ -14,9 +14,11 @@ from src.tn.docproc.regexes import Regexes
 from src.tn.docproc.pipeline import Pipeline
 from src.tn.docproc.emojitagger import EmojiTagger
 from src.tn.docproc.languagetagger import LanguageTagger
+from src.tn.docproc.spellchecktagger import SpellCheckTagger
 
 if __name__ == "__main__":
     text = "woooood issssss your oyster.... 🥰 ###!!! ప్రపంచం అంతా వెతికిన ధనుష్ 🤩 లాంటి మరో నటుడు దొరకడు, 🤩 சுயமாக சிந்திக்க தெரிஞ்சவன் தான் சூப்பர் ஹீரோ 🥰 ಬಠಪಢಝ ಜಂಅಂಇ ಋಋ ಡಘಫಫಝ ಡಝಫಷ"
+    text = "woooood issssss your oyester       .... 🥰 ###!!! சுயமாக சிந்திக்க 🤩 beer"
     doc = Document(text)
     pipeline = Pipeline()
     
@@ -25,4 +27,5 @@ if __name__ == "__main__":
     pipeline.addStep(Regexes())
     pipeline.addStep(EmojiTagger())
     pipeline.addStep(LanguageTagger())
+    pipeline.addStep(SpellCheckTagger())
     pipeline.process(doc)
