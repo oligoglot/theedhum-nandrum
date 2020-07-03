@@ -8,7 +8,7 @@ import sys
 sys.path.append('../../..') 
 from src.tn.document.document import Document
 from src.tn.docproc.pipeline import Tagger
-from src.tn.document.tnlanguage import LanguageHelper
+from src.tn.document.languagehelper import LanguageHelper
 import cld2
 
 
@@ -21,7 +21,6 @@ class LanguageTagger(Tagger):
     # Replaces everything to lowercase, if it's latin alphabet.
     def execute(self):
         print ("Before processing : {} :  {}".format(self.__class__.__name__, self.document))
-
         tagged = self.helper.extractLanguageTags(self.document)
         self.document.set("tagged", tagged)
         print ("After processing : {} :  {}".format(self.__class__.__name__, self.document))

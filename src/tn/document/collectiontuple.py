@@ -5,7 +5,7 @@ This is a logical single block of the document
 
 class CollectionTuple:
     def __init__(self, lang="", text=''):
-        # jiji is a random name to capture our version of emoji
+        # jiji is a random name to capture the context of the tuple. Too sleepy to name it anything. 
         self.jiji = {
             "lang"      : lang,
             "text"      : text,

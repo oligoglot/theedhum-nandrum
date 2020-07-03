@@ -41,6 +41,7 @@ class EmojiHelper:
                         jiji = CollectionTuple(text=text)
                         jiji.set("relativePos", relativePos)
                         jiji.set("absolutePos", absolutePos)
+                        jiji.set("len", len(text))  
                         collection.append(jiji.getJiji())
                         currCollection = []
                         relativePos += len(text)
@@ -50,6 +51,7 @@ class EmojiHelper:
                     jiji = Emoji(lang="emoji", text=c)
                     jiji.set("relativePos", relativePos)
                     jiji.set("absolutePos", absolutePos)
+                    jiji.set("len", 1)
                     collection.append(jiji.getJiji())
                     relativePos += 1
                     absolutePos += 1
@@ -65,6 +67,7 @@ class EmojiHelper:
                 jiji = CollectionTuple(text=text)
                 jiji.set("relativePos", relativePos)
                 jiji.set("absolutePos", absolutePos)
+                jiji.set("len", len(text))
                 collection.append(jiji.getJiji())
                 
             # TODO: Replace the current tagged position with jijiCollection and increment the taggedIndex.

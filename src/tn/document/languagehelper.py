@@ -31,21 +31,22 @@ class LanguageHelper:
             #print('  details: %s' % str(details))
             i=0
             for vector in vectors:
-                print ("*************")
+                #print ("*************")
                 #print (vector)
-                print (details[i])
+                #print (details[i])
                 start = vector[0]
                 end = vector[1]
-                print ("Start : {}, end : {}".format(start, start+end))
-                print (vector)
-                print (text[start:start+end])
+                #print ("Start : {}, end : {}".format(start, start+end))
+                #print (vector)
+                #print (text[start:start+end])
 
                 jiji = CollectionTuple(text=text[start:start+end])
                 jiji.set("relativePos", start)
                 jiji.set("absolutePos", start)
                 jiji.set("lang", vector[3])
+                jiji.set("len", end-start) # Length of this block
                 collection.append(jiji.getJiji())
 
                 i += 1
-                print ("*************")
+                #print ("*************")
         return collection

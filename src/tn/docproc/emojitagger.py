@@ -7,7 +7,7 @@ import sys
 sys.path.append('../../..') 
 from src.tn.document.document import Document
 from src.tn.docproc.pipeline import Tagger
-from src.tn.document.tnemoji import Emoji, EmojiHelper
+from src.tn.document.emojihelper import Emoji, EmojiHelper
 
 class EmojiTagger(Tagger):
     def __init__(self, document=Document()):

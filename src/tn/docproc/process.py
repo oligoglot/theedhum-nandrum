@@ -16,13 +16,13 @@ from src.tn.docproc.emojitagger import EmojiTagger
 from src.tn.docproc.languagetagger import LanguageTagger
 
 if __name__ == "__main__":
-    text = "world is your oyster. 🥰 ప్రపంచం అంతా వెతికిన ధనుష్ 🤩 లాంటి మరో నటుడు దొరకడు"
+    text = "woooood issssss your oyster.... 🥰 ###!!! ప్రపంచం అంతా వెతికిన ధనుష్ 🤩 లాంటి మరో నటుడు దొరకడు, 🤩 சுயமாக சிந்திக்க தெரிஞ்சவன் தான் சூப்பர் ஹீரோ 🥰 ಬಠಪಢಝ ಜಂಅಂಇ ಋಋ ಡಘಫಫಝ ಡಝಫಷ"
     doc = Document(text)
     pipeline = Pipeline()
     
-    #pipeline.addStep(Whitespace())
-    #pipeline.addStep(Lowercase())
-    #pipeline.addStep(Regexes())
+    pipeline.addStep(Whitespace())
+    pipeline.addStep(Lowercase())
+    pipeline.addStep(Regexes())
     pipeline.addStep(EmojiTagger())
     pipeline.addStep(LanguageTagger())
     pipeline.process(doc)
