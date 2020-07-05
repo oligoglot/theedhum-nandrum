@@ -10,7 +10,7 @@ pipeline.
 Each step in the pipeline expects the input and output in a certain tuple format defined as JSON.
 TODO: Add a reference to the tuple 
 '''
-from _typeshed import StrPath
+
 from src.tn.document.document import Document
 # This is the base class that needs to be inherited for all Steps, except Taggers
 class Step:
