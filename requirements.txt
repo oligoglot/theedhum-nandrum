@@ -1,3 +1,4 @@
 nltk
 cld2-cffi
 emoji
+pattern3
