@@ -4,10 +4,11 @@ Theedhum Nandrum version of emoji class
 '''
 import emoji
 from  src.tn.document.collectiontuple import CollectionTuple
+from src.tn.document.document import Document
 
 # Emoji is a special case of CollectionTuple
 class Emoji(CollectionTuple):
-    def __init__(self, lang="emoji", text=""):
+    def __init__(self, lang : str="emoji", text:str=""):
         # jiji is a random name to capture our version of emoji
         self.jiji = {
             "lang"      : lang,
@@ -23,10 +24,11 @@ class EmojiHelper:
         pass
 
     # Given a document, this function extracts all the emojis  
-    def extractEmojiTags(self, document):
+    def extractEmojiTags(self, document:Document):
         # Iterate over each of the tagged portions of the document to identify the emojis
         absolutePos = 0
         taggedIndex = 0
+        collection = []
         for tagged in document.get("tagged"):
             currCollection = []
             collection = []
