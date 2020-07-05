@@ -7,18 +7,18 @@ import json
 # Inputs to this class class be various, but it always returns a JSON object.
 class Document:
     js = {}
-    def __init__(self, text=""):
+    def __init__(self, text : str =""):
         self.js["original"] = text  # Keep the orignial text for reference
         self.js["text"] = text      # This is the filed that will be modified
         self.js["tagged"] = [text]
 
     # Sets the value to key. Simple shit.
-    def set(self, key, value):
+    def set(self, key : str, value : str):
         self.js[key] = value
         if key == "text":
             self.js["tagged"][0] = value
 
-    def get(self, key):
+    def get(self, key : str):
         return self.js[key]
 
     # Overload the __str__ function so that this can be used directly in print.

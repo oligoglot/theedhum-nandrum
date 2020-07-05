@@ -4,6 +4,7 @@ Language helper class
 '''
 
 from  src.tn.document.collectiontuple import CollectionTuple
+from src.tn.document.document import Document
 import cld2
 
 # This is the helper class for language classification in the context of theedhum nandrum.
@@ -13,7 +14,7 @@ class LanguageHelper:
         pass
 
     # Given a document, this function extracts all the emojis  
-    def extractLanguageTags(self, document):
+    def extractLanguageTags(self, document:Document):
         # Iterate over each of the tagged portions of the document to identify the languages
         absolutePos = 0
         taggedIndex = 0

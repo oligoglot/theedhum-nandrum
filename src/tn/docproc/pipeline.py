@@ -10,9 +10,11 @@ pipeline.
 Each step in the pipeline expects the input and output in a certain tuple format defined as JSON.
 TODO: Add a reference to the tuple 
 '''
+
+from src.tn.document.document import Document
 # This is the base class that needs to be inherited for all Steps, except Taggers
 class Step:
-    def __init__(self, document):
+    def __init__(self, document:Document):
         print ("In baseclass")
         self.document = document
 
@@ -25,7 +27,7 @@ class Step:
         return self.document
 
     # Do not implement this method in inherited class
-    def setDocument(self, document):
+    def setDocument(self, document:Document):
         self.document = document 
 
 # This is the base class that needs to be inherited for all Taggers in docproc pipeline
@@ -42,7 +44,7 @@ class Pipeline:
         pass
 
     # Expects an object of type Step to be passed
-    def addStep(self, step):
+    def addStep(self, step:Step):
         self.pipelineSteps.append(step)
 
     # This function iterates over the steps and executes
