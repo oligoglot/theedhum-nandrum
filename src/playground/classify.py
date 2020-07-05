@@ -11,7 +11,7 @@ nltk.download('movie_reviews')
 #               for fileid in movie_reviews.fileids(category)]
 documents = []
 #f = sys.argv[1] 
-f = "resources/data/tamil_train.tsv"
+f = "../../resources/data/tamil_train.tsv"
 with open(f, 'r', encoding='utf-8') as inf:
     for line in inf:
         (review, cat) = re.split('\t', line.strip())
