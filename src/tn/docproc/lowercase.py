@@ -2,9 +2,9 @@
 @author mojosaurus
 Replaces multiple whitespaces with one whitespace
 '''
-import sys
+import os,sys
 # Appeding our src directory to sys path so that we can import modules.
-sys.path.append('../../..') 
+sys.path.append(os.path.join(os.path.dirname(__file__),'../../..'))
 from src.tn.docproc.pipeline import Step
 from src.tn.document.document import Document
 

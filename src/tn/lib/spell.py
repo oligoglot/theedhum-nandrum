@@ -7,11 +7,12 @@ MIT license: www.opensource.org/licenses/mit-license.php
 ################ Spelling Corrector 
 
 import re
+import os
 from collections import Counter
 
 def words(text): return re.findall(r'\w+', text.lower())
 
-WORDS = Counter(words(open('../../../resources/data/big.txt').read()))
+WORDS = Counter(words(open(os.path.join(os.path.dirname(__file__),'../../../resources/data/big.txt')).read()))
 
 def P(word, N=sum(WORDS.values())): 
     "Probability of `word`."

@@ -1,10 +1,11 @@
 """ Package Initialization file. """
+import os
 import logging
 from logging import StreamHandler
 from logging.handlers import RotatingFileHandler
 
 # Create the Handler for logging data to a file
-logger_handler = RotatingFileHandler('../../../logs/tn.log', maxBytes=1024, backupCount=5)
+logger_handler = RotatingFileHandler(os.path.join(os.path.dirname(__file__), '../logs/tn.log'), maxBytes=1024, backupCount=5)
 logger_handler.setLevel(logging.INFO)
 
 #Create the Handler for logging data to console.

@@ -3,9 +3,9 @@
 Tags languages
 '''
 
-import sys
+import os,sys
 # Appeding our src directory to sys path so that we can import modules.
-sys.path.append('../../..') 
+sys.path.append(os.path.join(os.path.dirname(__file__),'../../..'))
 from src.tn.document.document import Document
 from src.tn.docproc.pipeline import Tagger
 from src.tn.document.languagehelper import LanguageHelper
