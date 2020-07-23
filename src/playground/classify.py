@@ -13,7 +13,7 @@ nltk.download('movie_reviews')
 #               for category in movie_reviews.categories()
 #               for fileid in movie_reviews.fileids(category)]
 documents = []
-#f = sys.argv[1]
+# f = sys.argv[1]
 f = "../../resources/data/tamil_train.tsv"
 with open(f, 'r', encoding='utf-8') as inf:
     for line in inf:
@@ -31,13 +31,23 @@ training_words = nltk.FreqDist(w.lower() for d in documents for w in d[0])
 training_words = list(training_words)[:2000]
 all_words = imdb_words + training_words
 word_features = all_words
-
+all_word_features_base = {}
+for word in word_features:
+  all_word_features_base['contains({})'.format(word)] = (False)
+all_emoji_features_base = {}
+for c in UNICODE_EMOJI:
+  all_emoji_features_base['has-emoji({})'.format(c)] = (False)
 
 def document_features(document, feature_sets):
     document_words = set(document)
     # TODO: use bigrams in both training and testing
-    #document_bigrams = set(list(nltk.bigrams(document)))
+    # document_bigrams = set(list(nltk.bigrams(document)))
     features = {}
+    if ('occurance' in feature_sets):
+      features.update(all_word_features_base)
+      for word in document_words:
+        features =  all_word_features_base.copy()
+        features['contains({})'.format(word)] = (True)
 
     if ('emojis' in feature_sets):
         document_emoji_feature(document_words, features)
@@ -45,24 +55,21 @@ def document_features(document, feature_sets):
     if ('length' in feature_sets):
         document_length_feature(document_words, features)
 
-    if ('occurance' in feature_sets):
-        for word in word_features:
-            features['contains({})'.format(word)] = (word in document_words)
-
     return features
 
 
 def document_emoji_feature(document_words, features):
+    features.update(all_emoji_features_base)
     allchars = set(''.join(document_words))
-    for c in UNICODE_EMOJI:
-        features['has-emoji({})'.format(c)] = (c in allchars)
+    for c in allchars:
+        features['has-emoji({})'.format(c)] = (True)
 
 
 def document_length_feature(document_words, features):
     #  features['word-count'] = len(document_words)
     doclen = sum(len(word) for word in document_words)
     features['doc-length'] = get_range(doclen)
-    #features['avg-word-length'] = int(round(features['doc-length']/len(document_words)))
+    # features['avg-word-length'] = int(round(features['doc-length']/len(document_words)))
 
 
 def get_range(doclen):
@@ -76,36 +83,45 @@ def get_range(doclen):
 
 test_size = int(len(documents)/20.0)
 # Train Naive Bayes classifier
-featuresets = [(document_features(d, {'occurance'}), c)
-               for (d, c) in documents]
-train_set, test_set = featuresets[test_size:], featuresets[:test_size]
-classifier = nltk.NaiveBayesClassifier.train(train_set)
+# featuresets = [(document_features(d, {'occurance'}), c)
+#                for (d, c) in documents]
+# train_set, test_set = featuresets[test_size:], featuresets[:test_size]
+# classifier = nltk.NaiveBayesClassifier.train(train_set)
 
-# Test the classifier
-print(nltk.classify.accuracy(classifier, test_set))
-# classifier.show_most_informative_features(25)
+# # Test the classifier
+# print(nltk.classify.accuracy(classifier, test_set))
+# # classifier.show_most_informative_features(25)
 
-featuresets = [(document_features(d, {'emojis'}), c) for (d, c) in documents]
-train_set, test_set = featuresets[test_size:], featuresets[:test_size]
-classifier = nltk.NaiveBayesClassifier.train(train_set)
+# featuresets = [(document_features(d, {'emojis'}), c) for (d, c) in documents]
+# train_set, test_set = featuresets[test_size:], featuresets[:test_size]
+# classifier = nltk.NaiveBayesClassifier.train(train_set)
 
-# Test the classifier
-print(nltk.classify.accuracy(classifier, test_set))
-# classifier.show_most_informative_features(25)
+# # Test the classifier
+# print(nltk.classify.accuracy(classifier, test_set))
+# # classifier.show_most_informative_features(25)
 
 
-featuresets = [(document_features(d, {'length'}), c) for (d, c) in documents]
-train_set, test_set = featuresets[test_size:], featuresets[:test_size]
-classifier = nltk.NaiveBayesClassifier.train(train_set)
+# featuresets = [(document_features(d, {'length'}), c) for (d, c) in documents]
+# train_set, test_set = featuresets[test_size:], featuresets[:test_size]
+# classifier = nltk.NaiveBayesClassifier.train(train_set)
 
-# Test the classifier
-print(nltk.classify.accuracy(classifier, test_set))
-# classifier.show_most_informative_features(25)
+# # Test the classifier
+# print(nltk.classify.accuracy(classifier, test_set))
+# # classifier.show_most_informative_features(25)
 
 featuresets = [
-    (document_features(d, {'length', 'emojis'}), c) for (d, c) in documents]
+    (document_features(d, {'emojis'}), c) for (d, c) in documents]
 train_set, test_set = featuresets[test_size:], featuresets[:test_size]
 classifier = nltk.NaiveBayesClassifier.train(train_set)
 
 # Test the classifier
 print(nltk.classify.accuracy(classifier, test_set))
+
+#Classify a few docs and check
+for(d, c) in documents[:100]:
+    guess = classifier.classify(document_features(
+        d, {'emojis'}))
+    if(guess != c):
+        print('Got It Wrong correct={} guess={} comment={}'.format(c, guess, ' '.join(d)))
+    else:
+        print('Got It Right guess={} comment={}'.format(guess, ' '.join(d).strip()))
