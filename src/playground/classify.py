@@ -13,23 +13,21 @@ nltk.download('movie_reviews')
 # documents = [(list(movie_reviews.words(fileid)), category)
 #               for category in movie_reviews.categories()
 #               for fileid in movie_reviews.fileids(category)]
-documents = []
 # f = sys.argv[1]
-f = "../../resources/data/tamil_train.tsv"
-with open(f, 'r', encoding='utf-8') as inf:
-    for line in inf:
-        (review, cat) = re.split('\t', line.strip())
-        words = review.split()
-        document = (list(words), cat)
-        documents.append(document)
-random.shuffle(documents)
 
-bag_of_words = {}
-all_ngrams = {}
-all_emojis = {}
+
+def load_docs(source):
+    documents = []
+    with open(source, 'r', encoding='utf-8') as inf:
+        for line in inf:
+            (review, cat) = re.split('\t', line.strip())
+            words = review.split()
+            document = (list(words), cat)
+            documents.append(document)
+    return documents
+
 
 # Define the feature extractor
-
 
 def document_features(document, feature_sets):
     document_words = set(document)
@@ -67,6 +65,8 @@ def get_bag_of_all_words():
 
 # The bag of Words Feature Classifier. Marks occurance of words from the universal
 # dictonary
+
+
 def document_bag_of_words_feature(document_words, features):
     bag_of_words = get_bag_of_all_words()
     features.update(bag_of_words)
@@ -92,9 +92,9 @@ def document_emoji_feature(document_words, features):
 
 
 def document_length_feature(document_words, features):
-    #  features['word-count'] = len(document_words)
-    doclen = sum(len(word) for word in document_words)
-    features['doc-length'] = get_range(doclen)
+    features['word-count'] = len(document_words)
+    # doclen = sum(len(word) for word in document_words)
+    # features['doc-length'] = get_range(doclen)
     # features['avg-word-length'] = int(round(features['doc-length']/len(document_words)))
 
 
@@ -107,6 +107,8 @@ def get_range(doclen):
     return ranges[index]
 
 # Similar to bag of words filter, but for N grams
+
+
 def get_all_ngrams(n):
     if not hasattr(get_all_ngrams, "all_ngrams"):
         get_all_ngrams.all_ngrams = {}
@@ -130,32 +132,27 @@ def document_ngram_feature(doc, features, n):
         features['contains({})'.format("-".join(str(ngram)[1:-1]))] = (True)
 
 
+documents = load_docs("../../resources/data/tamil_train.tsv")
+random.shuffle(documents)
 test_size = int(len(documents)/20.0)
-# Train Naive Bayes classifier
 
 
-featuresets = [(document_features(d, {'bag_of_words'}), c)
-               for (d, c) in documents]
-train_set, test_set = featuresets[test_size:], featuresets[:test_size]
-classifier = nltk.NaiveBayesClassifier.train(train_set)
-
-# Test the classifier
-print(nltk.classify.accuracy(classifier, test_set))
-# # classifier.show_most_informative_features(25)
-
-featuresets = [
-    (document_features(d, {'emojis': 1, 'ngram': 5}), c) for (d, c) in documents]
-train_set, test_set = featuresets[test_size:], featuresets[:test_size]
-classifier = nltk.NaiveBayesClassifier.train(train_set)
-
-# Test the classifier
-print(nltk.classify.accuracy(classifier, test_set))
-
+feature_filters = [{'length': 1}, {'bag_of_words': 1}, {'ngram': 4}, {'ngram': 5}, {
+    'length': 1, 'ngram': 5}, {'length': 1, 'ngram': 4}, {'emojis': 1}, {'emojis': 1, 'ngram': 4}]
+for filter in feature_filters:
+    # Train Naive Bayes classifier
+    featuresets = [
+        (document_features(d, filter), c) for (d, c) in documents]
+    train_set, test_set = featuresets[test_size:], featuresets[:test_size]
+    classifier = nltk.NaiveBayesClassifier.train(train_set)
+    # Test the classifier
+    print("{} -> {}". format(str(filter),
+                             nltk.classify.accuracy(classifier, test_set)))
 
 # Classify a few docs and check
 # for(d, c) in documents[:100]:
 #     guess = classifier.classify(document_features(
-#         d, {'emojis' : 1 ,'ngram': 5}))
+#         d, {'length' : 1 ,'ngram': 4}))
 #     if(guess != c):
 #         print('Got It Wrong correct={} guess={} comment={}'.format(
 #             c, guess, ' '.join(d)))
