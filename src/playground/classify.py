@@ -10,12 +10,9 @@ from bisect import bisect_left
 import math
 
 nltk.download('movie_reviews')
-# documents = [(list(movie_reviews.words(fileid)), category)
+#nltk_documents = [(list(movie_reviews.words(fileid)), category)
 #               for category in movie_reviews.categories()
 #               for fileid in movie_reviews.fileids(category)]
-# f = sys.argv[1]
-
-
 def load_docs(source):
     documents = []
     with open(source, 'r', encoding='utf-8') as inf:
@@ -138,7 +135,8 @@ test_size = int(len(documents)/20.0)
 
 
 feature_filters = [{'length': 1}, {'bag_of_words': 1}, {'ngram': 4}, {'ngram': 5}, {
-    'length': 1, 'ngram': 5}, {'length': 1, 'ngram': 4}, {'emojis': 1}, {'emojis': 1, 'ngram': 4}]
+    'length': 1, 'ngram': 5}, {'length': 1, 'ngram': 4}, {'emojis': 1}, {'emojis': 1, 'ngram': 4}, 
+    {'bag_of_words': 1, 'ngram': 4, 'length': 1, 'emojis': 1}]
 for filter in feature_filters:
     # Train Naive Bayes classifier
     featuresets = [
