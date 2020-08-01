@@ -112,22 +112,21 @@ def get_all_ngrams(n):
         imdb_ngrams = list(ngrams(movie_reviews.words(), n))[:2000]
         training_ngrams = []
         for d in documents:
-            training_ngrams.append(ngrams(d[0], n))
+            training_ngrams.extend(ngrams(d[0], n))
         training_ngrams = training_ngrams[:2000]
         total_ngrams = imdb_ngrams + training_ngrams
         for ngram in total_ngrams:
             get_all_ngrams.all_ngrams['contains({})'.format(
-                "-".join(str(ngram)[1:-1]))] = (False)
+                "-".join(ngram))] = (False)
     return get_all_ngrams.all_ngrams
 
 
 def document_ngram_feature(doc, features, n):
     all_ngrams = get_all_ngrams(n)
-    doc_ngrams = ngrams(doc, n)
+    doc_ngrams = list(ngrams(doc, n))
     features.update(all_ngrams)
     for ngram in doc_ngrams:
-        features['contains({})'.format("-".join(str(ngram)[1:-1]))] = (True)
-
+        features['contains({})'.format("-".join(ngram))] = (True)
 
 documents = load_docs("../../resources/data/tamil_train.tsv")
 random.shuffle(documents)
