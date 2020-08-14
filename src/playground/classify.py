@@ -8,6 +8,9 @@ import re
 from emoji import UNICODE_EMOJI
 from bisect import bisect_left
 import math
+# Appeding our src directory to sys path so that we can import modules.
+sys.path.append('../..')
+from  src.tn.lib.sentimoji import get_emoji_sentiment_rank
 
 nltk.download('movie_reviews')
 #nltk_documents = [(list(movie_reviews.words(fileid)), category)
@@ -84,8 +87,22 @@ def document_emoji_feature(document_words, features):
     all_emojis = get_all_emojis()
     features.update(all_emojis)
     allchars = set(''.join(document_words))
+    score = 0.0
     for c in allchars:
         features['has-emoji({})'.format(c)] = (True)
+        sentiment = get_emoji_sentiment_rank(c)
+        if sentiment is not False:
+            score += sentiment['sentiment_score']
+    features['emoji-positive'] = (False)
+    features['emoji-negative'] = (False)
+    features['emoji-neutral'] = (False)
+    if score > 0.2:
+        features['emoji-positive'] = (True)
+    elif score < -0.2:
+        features['emoji-negative'] = (True)
+    else:
+        features['emoji-neutral'] = (True)
+
 
 
 def document_length_feature(document_words, features):
@@ -128,7 +145,7 @@ def document_ngram_feature(doc, features, n):
     for ngram in doc_ngrams:
         features['contains({})'.format("-".join(ngram))] = (True)
 
-documents = load_docs("../../resources/data/tamil_train.tsv")
+documents = load_docs("../../resources/data/tamil_dev.tsv")
 random.shuffle(documents)
 test_size = int(len(documents)/20.0)
 
