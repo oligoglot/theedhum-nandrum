@@ -1,0 +1,3 @@
+[submodule "src/extern/indic_nlp_library"]
+	path = src/extern/indic_nlp_library
+	url = https://github.com/anoopkunchukuttan/indic_nlp_library.git
