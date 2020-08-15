@@ -25,6 +25,10 @@ def load_docs(source):
             words = review.split()
             document = (list(words), cat)
             documents.append(document)
+            if cat != 'Positive':
+                for i in range(5):
+                    # oversampling to correct bias
+                    documents.append(document)
     return documents
 
 
