@@ -10,7 +10,7 @@ from bisect import bisect_left
 import math
 # Appeding our src directory to sys path so that we can import modules.
 sys.path.append('../..')
-from  src.tn.lib.sentimoji import get_emoji_sentiment_rank
+#from  src.tn.lib.sentimoji import get_emoji_sentiment_rank
 
 nltk.download('movie_reviews')
 #nltk_documents = [(list(movie_reviews.words(fileid)), category)
@@ -146,10 +146,16 @@ def document_ngram_feature(doc, features, n):
     for ngram in doc_ngrams:
         features['contains({})'.format("-".join(ngram))] = (True)
 
+def get_classifier_metrics_report(classifier, inputset, features):
+  refset, guesset= [], []
+  for (d,c) in inputset:
+    refset.append(c)
+    guesset.append(classifier.classify(document_features(d, features)))
+  return classification_report(refset, guesset)
+
 documents = load_docs("../../resources/data/tamil_dev.tsv")
 random.shuffle(documents)
 test_size = int(len(documents)/20.0)
-
 
 feature_filters = [{'length': 1}, {'bag_of_words': 1}, {'ngram': [4]}, {'ngram': [5]}, {
     'length': 1, 'ngram': [5]}, {'length': 1, 'ngram': [4]}, {'emojis': 1}, {'emojis': 1, 'ngram': [2, 3, 4]},
@@ -160,9 +166,12 @@ for filter in feature_filters:
         (document_features(d, filter), c) for (d, c) in documents]
     train_set, test_set = featuresets[test_size:], featuresets[:test_size]
     classifier = nltk.NaiveBayesClassifier.train(train_set)
+    report = get_classifier_metrics_report(classifier, test_set, filter)
+    print("Classification report for classifier %s\n"
+      % (report))
     # Test the classifier
-    print("{} -> {}". format(str(filter),
-                             nltk.classify.accuracy(classifier, test_set)))
+    # print("{} -> {}". format(str(filter),
+    #                          nltk.classify.accuracy(classifier, test_set)))
 
 # Classify a few docs and check
 # for(d, c) in documents[:100]:
