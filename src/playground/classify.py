@@ -8,6 +8,7 @@ import re
 from emoji import UNICODE_EMOJI
 from bisect import bisect_left
 import math
+from sklearn.metrics import classification_report
 # Appeding our src directory to sys path so that we can import modules.
 sys.path.append('../..')
 from  src.tn.lib.sentimoji import get_emoji_sentiment_rank
