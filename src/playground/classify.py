@@ -1,4 +1,5 @@
 # Load and prepare the dataset
+from multiprocessing import Process, Manager
 import nltk
 from nltk.corpus import movie_reviews
 from nltk.util import ngrams
@@ -33,24 +34,39 @@ def load_docs(source):
 
 
 # Define the feature extractor
-
+manager = Manager()
 def document_features(document, feature_sets):
     document_words = set(document)
     # TODO: use bigrams in both training and testing
     # document_bigrams = set(list(nltk.bigrams(document)))
-    features = {}
+    features = manager.dict()
+    processes = []
     if ('bag_of_words' in feature_sets):
-        document_bag_of_words_feature(document_words, features)
+        p = Process(target=document_bag_of_words_feature, args=(document_words, features,))
+        processes.append(p)
+        # document_bag_of_words_feature(document_words, features)
 
     if ('emojis' in feature_sets):
-        document_emoji_feature(document_words, features)
+        p = Process(target=document_emoji_feature, args=(document_words, features,))
+        processes.append(p)
+        p.start()
+        # document_emoji_feature(document_words, features)
 
     if ('length' in feature_sets):
-        document_length_feature(document_words, features)
+        p = Process(target=document_length_feature, args=(document_words, features,))
+        processes.append(p)
+        p.start()
+        # document_length_feature(document_words, features)
 
     if ('ngram' in feature_sets):
         for size in feature_sets['ngram']:
-            document_ngram_feature(document, features, size)
+            p = Process(target=document_ngram_feature, args=(document, features, size,))
+            processes.append(p)
+            p.start()
+            # document_ngram_feature(document, features, size)
+
+    for process in processes:
+        process.join()
     return(features)
 
 
@@ -110,7 +126,6 @@ def document_emoji_feature(document_words, features):
         features['emoji-neutral'] = (True)
 
 
-
 def document_length_feature(document_words, features):
     features['word-count'] = len(document_words)
     # doclen = sum(len(word) for word in document_words)
@@ -165,8 +180,8 @@ testing_documents = load_docs("../../resources/data/tamil_dev.tsv")
 # random.shuffle(documents)
 # test_size = int(len(documents)/20.0)
 
-feature_filters = [{'length': 1}, {'bag_of_words': 1}, {'ngram': [4]}, {'ngram': [5]}, {
-    'length': 1, 'ngram': [5]}, {'length': 1, 'ngram': [4]}, {'emojis': 1}, {'emojis': 1, 'ngram': [2, 3, 4]},
+feature_filters = [{'length': 1}, {'bag_of_words': 1}, {'length': 1, 'ngram': [5]}, 
+    {'length': 1, 'ngram': [4]}, {'emojis': 1}, {'emojis': 1, 'ngram': [2, 3, 4]},
     {'bag_of_words': 1, 'ngram': [2, 3, 4], 'length': 1, 'emojis': 1}]
 for filter in feature_filters:
     # Train Naive Bayes classifier
@@ -174,6 +189,7 @@ for filter in feature_filters:
         (document_features(d, filter), c) for (d, c) in training_documents]
     test_set = train_set = [
         (document_features(d, filter), c) for (d, c) in training_documents]
+    print(f'loaded {len(train_set)} training documents and {len(test_set)} test documents')
     classifier = nltk.NaiveBayesClassifier.train(train_set)
     report = get_classifier_metrics_report(classifier, test_set, filter)
     print("Classification report for classifier %s\n"
