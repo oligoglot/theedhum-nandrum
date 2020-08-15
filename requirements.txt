@@ -2,3 +2,4 @@ nltk
 cld2-cffi
 emoji
 pattern3
+sklearn
