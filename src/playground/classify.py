@@ -44,7 +44,8 @@ def document_features(document, feature_sets):
         document_length_feature(document_words, features)
 
     if ('ngram' in feature_sets):
-        document_ngram_feature(document, features, feature_sets['ngram'])
+        for size in feature_sets['ngram']:
+            document_ngram_feature(document, features, size)
     return(features)
 
 
@@ -150,9 +151,9 @@ random.shuffle(documents)
 test_size = int(len(documents)/20.0)
 
 
-feature_filters = [{'length': 1}, {'bag_of_words': 1}, {'ngram': 4}, {'ngram': 5}, {
-    'length': 1, 'ngram': 5}, {'length': 1, 'ngram': 4}, {'emojis': 1}, {'emojis': 1, 'ngram': 4}, 
-    {'bag_of_words': 1, 'ngram': 4, 'length': 1, 'emojis': 1}]
+feature_filters = [{'length': 1}, {'bag_of_words': 1}, {'ngram': [4]}, {'ngram': [5]}, {
+    'length': 1, 'ngram': [5]}, {'length': 1, 'ngram': [4]}, {'emojis': 1}, {'emojis': 1, 'ngram': [2, 3, 4]},
+    {'bag_of_words': 1, 'ngram': [2, 3, 4], 'length': 1, 'emojis': 1}]
 for filter in feature_filters:
     # Train Naive Bayes classifier
     featuresets = [
