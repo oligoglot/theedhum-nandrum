@@ -56,7 +56,7 @@ def get_bag_of_all_words():
         imdb_words = list(nltk.FreqDist(w.lower()
                                         for w in movie_reviews.words()))[:2000]
         training_words = nltk.FreqDist(w.lower()
-                                       for d in documents for w in d[0])
+                                       for d in training_documents for w in d[0])
         training_words = list(training_words)[:2000]
         all_words = imdb_words + training_words
         word_features = all_words
@@ -130,7 +130,7 @@ def get_all_ngrams(n):
         get_all_ngrams.all_ngrams = {}
         imdb_ngrams = list(ngrams(movie_reviews.words(), n))[:2000]
         training_ngrams = []
-        for d in documents:
+        for d in training_documents:
             training_ngrams.extend(ngrams(d[0], n))
         training_ngrams = training_ngrams[:2000]
         total_ngrams = imdb_ngrams + training_ngrams
