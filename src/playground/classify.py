@@ -9,6 +9,10 @@ from emoji import UNICODE_EMOJI
 from bisect import bisect_left
 import math
 from sklearn.metrics import classification_report
+from nltk.classify.scikitlearn import SklearnClassifier
+from sklearn.naive_bayes import MultinomialNB,BernoulliNB
+from sklearn.linear_model import LogisticRegression,SGDClassifier
+from sklearn.svm import SVC, LinearSVC, NuSVC
 # Appeding our src directory to sys path so that we can import modules.
 sys.path.append('../..')
 from  src.tn.lib.sentimoji import get_emoji_sentiment_rank
@@ -20,6 +24,8 @@ nltk.download('movie_reviews')
 def load_docs(source):
     documents = []
     with open(source, 'r', encoding='utf-8') as inf:
+        # skipping header row
+        next(inf)
         for line in inf:
             (review, cat) = re.split('\t', line.strip())
             words = review.split()
@@ -58,10 +64,10 @@ def get_bag_of_all_words():
     if not hasattr(get_bag_of_all_words, "bag_of_words"):
         get_bag_of_all_words.bag_of_words = {}
         imdb_words = list(nltk.FreqDist(w.lower()
-                                        for w in movie_reviews.words()))[:2000]
+                                        for w in movie_reviews.words()))[:1000]
         training_words = nltk.FreqDist(w.lower()
                                        for d in training_documents for w in d[0])
-        training_words = list(training_words)[:2000]
+        training_words = list(training_words)[:3000]
         all_words = imdb_words + training_words
         word_features = all_words
         for word in word_features:
@@ -132,11 +138,11 @@ def get_range(doclen):
 def get_all_ngrams(n):
     if not hasattr(get_all_ngrams, "all_ngrams"):
         get_all_ngrams.all_ngrams = {}
-        imdb_ngrams = list(ngrams(movie_reviews.words(), n))[:2000]
+        imdb_ngrams = list(ngrams(movie_reviews.words(), n))[:1000]
         training_ngrams = []
         for d in training_documents:
             training_ngrams.extend(ngrams(d[0], n))
-        training_ngrams = training_ngrams[:2000]
+        training_ngrams = training_ngrams[:3000]
         total_ngrams = imdb_ngrams + training_ngrams
         for ngram in total_ngrams:
             get_all_ngrams.all_ngrams['contains({})'.format(
@@ -168,16 +174,45 @@ testing_documents = load_docs("../../resources/data/tamil_dev.tsv")
 feature_filters = [{'length': 1}, {'bag_of_words': 1}, {'length': 1, 'ngram': [5]},
     {'length': 1, 'ngram': [4]}, {'emojis': 1}, {'emojis': 1, 'ngram': [2, 3, 4]},
     {'bag_of_words': 1, 'ngram': [2, 3, 4], 'length': 1, 'emojis': 1}]
+feature_filters = [{'length': 1}, {'bag_of_words': 1}]
 for filter in feature_filters:
     # Train Naive Bayes classifier
     train_set = [
         (document_features(d, filter), c) for (d, c) in training_documents]
     test_set = train_set = [
         (document_features(d, filter), c) for (d, c) in training_documents]
-    classifier = nltk.NaiveBayesClassifier.train(train_set)
-    report = get_classifier_metrics_report(classifier, test_set, filter)
-    print("Classification report for classifier %s\n"
-      % (report))
+    # classifier = nltk.NaiveBayesClassifier.train(train_set)
+    print(filter)
+    MNB_classifier = SklearnClassifier(MultinomialNB())
+    MNB_classifier.train(train_set)
+    report = get_classifier_metrics_report(MNB_classifier, test_set, filter)
+    print("Classification report for MNB classifier %s\n" % (report))
+
+    BNB_classifier = SklearnClassifier(BernoulliNB())
+    BNB_classifier.train(train_set)
+    report = get_classifier_metrics_report(BNB_classifier, test_set, filter)
+    print("Classification report for MNB classifier %s\n" % (report))
+
+    LogisticRegression_classifier = SklearnClassifier(LogisticRegression())
+    LogisticRegression_classifier.train(train_set)
+    report = get_classifier_metrics_report(LogisticRegression_classifier, test_set, filter)
+    print("Classification report for LR classifier %s\n" % (report))
+
+    SGDClassifier_classifier = SklearnClassifier(SGDClassifier())
+    SGDClassifier_classifier.train(train_set)
+    report = get_classifier_metrics_report(SGDClassifier_classifier, test_set, filter)
+    print("Classification report for SGD classifier %s\n" % (report))
+
+    SVC_classifier = SklearnClassifier(SVC())
+    SVC_classifier.train(train_set)
+    report = get_classifier_metrics_report(SVC_classifier, test_set, filter)
+    print("Classification report for SVC classifier %s\n" % (report))
+
+    LinearSVC_classifier = SklearnClassifier(LinearSVC())
+    LinearSVC_classifier.train(train_set)
+    report = get_classifier_metrics_report(LinearSVC_classifier, test_set, filter)
+    print("Classification report for LSVC classifier %s\n" % (report))
+
     # Test the classifier
     # print("{} -> {}". format(str(filter),
     #                          nltk.classify.accuracy(classifier, test_set)))
