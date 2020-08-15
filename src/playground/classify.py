@@ -156,18 +156,20 @@ def get_classifier_metrics_report(classifier, inputset, features):
     guesset.append(classifier.classify(document_features(d, features)))
   return classification_report(refset, guesset)
 
-documents = load_docs("../../resources/data/tamil_dev.tsv")
-random.shuffle(documents)
-test_size = int(len(documents)/20.0)
+training_documents = load_docs("../../resources/data/tamil_train.tsv")
+testing_documents = load_docs("../../resources/data/tamil_dev.tsv")
+# random.shuffle(documents)
+# test_size = int(len(documents)/20.0)
 
 feature_filters = [{'length': 1}, {'bag_of_words': 1}, {'ngram': [4]}, {'ngram': [5]}, {
     'length': 1, 'ngram': [5]}, {'length': 1, 'ngram': [4]}, {'emojis': 1}, {'emojis': 1, 'ngram': [2, 3, 4]},
     {'bag_of_words': 1, 'ngram': [2, 3, 4], 'length': 1, 'emojis': 1}]
 for filter in feature_filters:
     # Train Naive Bayes classifier
-    featuresets = [
-        (document_features(d, filter), c) for (d, c) in documents]
-    train_set, test_set = featuresets[test_size:], featuresets[:test_size]
+    train_set = [
+        (document_features(d, filter), c) for (d, c) in training_documents]
+    test_set = train_set = [
+        (document_features(d, filter), c) for (d, c) in training_documents]
     classifier = nltk.NaiveBayesClassifier.train(train_set)
     report = get_classifier_metrics_report(classifier, test_set, filter)
     print("Classification report for classifier %s\n"
