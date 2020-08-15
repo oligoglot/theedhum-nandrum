@@ -10,7 +10,7 @@ from bisect import bisect_left
 import math
 # Appeding our src directory to sys path so that we can import modules.
 sys.path.append('../..')
-#from  src.tn.lib.sentimoji import get_emoji_sentiment_rank
+from  src.tn.lib.sentimoji import get_emoji_sentiment_rank
 
 nltk.download('movie_reviews')
 #nltk_documents = [(list(movie_reviews.words(fileid)), category)
@@ -146,6 +146,8 @@ def document_ngram_feature(doc, features, n):
     for ngram in doc_ngrams:
         features['contains({})'.format("-".join(ngram))] = (True)
 
+# Output classification in sklearn report format - 
+# https://scikit-learn.org/stable/modules/generated/sklearn.metrics.classification_report.html
 def get_classifier_metrics_report(classifier, inputset, features):
   refset, guesset= [], []
   for (d,c) in inputset:
