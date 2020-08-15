@@ -174,7 +174,7 @@ testing_documents = load_docs("../../resources/data/tamil_dev.tsv")
 feature_filters = [{'length': 1}, {'bag_of_words': 1}, {'length': 1, 'ngram': [5]},
     {'length': 1, 'ngram': [4]}, {'emojis': 1}, {'emojis': 1, 'ngram': [2, 3, 4]},
     {'bag_of_words': 1, 'ngram': [2, 3, 4], 'length': 1, 'emojis': 1}]
-feature_filters = [{'length': 1}, {'bag_of_words': 1}]
+# feature_filters = [{'length': 1}, {'bag_of_words': 1}]
 for filter in feature_filters:
     # Train Naive Bayes classifier
     train_set = [
