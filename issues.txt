@@ -1,0 +1,24 @@
+(venv) sundar@dwadmin-ThinkPad-L480:~/playspace/theedhum-nandrum$ cd src/tn/docproc/
+(venv) sundar@dwadmin-ThinkPad-L480:~/playspace/theedhum-nandrum/src/tn/docproc$ python process.py 
+Traceback (most recent call last):
+  File "process.py", line 9, in <module>
+    from src.tn.docproc.pipeline import Step
+  File "../../../src/__init__.py", line 7, in <module>
+    logger_handler = RotatingFileHandler('../../../logs/tn.log', maxBytes=1024, backupCount=5)
+  File "/usr/lib/python3.7/logging/handlers.py", line 148, in __init__
+    BaseRotatingHandler.__init__(self, filename, mode, encoding, delay)
+  File "/usr/lib/python3.7/logging/handlers.py", line 55, in __init__
+    logging.FileHandler.__init__(self, filename, mode, encoding, delay)
+  File "/usr/lib/python3.7/logging/__init__.py", line 1087, in __init__
+    StreamHandler.__init__(self, self._open())
+  File "/usr/lib/python3.7/logging/__init__.py", line 1116, in _open
+    return open(self.baseFilename, self.mode, encoding=self.encoding)
+FileNotFoundError: [Errno 2] No such file or directory: '/home/sundar/playspace/theedhum-nandrum/logs/tn.log'
+(venv) sundar@dwadmin-ThinkPad-L480:~/playspace/theedhum-nandrum/src/tn/docproc$ ls
+emojitagger.py  __init__.py  languagetagger.py  lowercase.py  pipeline.py  process.py  regexes.py  spellchecktagger.py  whitespace.py
+(venv) sundar@dwadmin-ThinkPad-L480:~/playspace/theedhum-nandrum/src/tn/docproc$ mkdir -p /home/sundar/playspace/theedhum-nandrum/logs/
+(venv) sundar@dwadmin-ThinkPad-L480:~/playspace/theedhum-nandrum/src/tn/docproc$ touch /home/sundar/playspace/theedhum-nandrum/logs/tn.log
+(venv) sundar@dwadmin-ThinkPad-L480:~/playspace/theedhum-nandrum/src/tn/docproc$
+
+
+pip install --upgrade 'git+https://github.com/GregBowyer/cld2-cffi.git@d048c5fa98066bdb130f1c7e52641a0645aef5ac' to fix the cld2 issue 
