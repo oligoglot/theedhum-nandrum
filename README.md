@@ -18,7 +18,7 @@ A sentiment classifier on mixed language (and mixed script) reviews in Tamil, Ma
 
 ## How to run playground files
 * You need to activate the virtualenv
-    * `source venv_tn/script/activate`
+    * `source venv_tn/bin/activate`
 * `cd src/playground`
 * `python classify.py`
 
