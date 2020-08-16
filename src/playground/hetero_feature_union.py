@@ -37,7 +37,7 @@ from sklearn.datasets.twenty_newsgroups import strip_newsgroup_footer
 from sklearn.datasets.twenty_newsgroups import strip_newsgroup_quoting
 from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction import DictVectorizer
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer, HashingVectorizer
 from sklearn.metrics import classification_report
 from sklearn.pipeline import FeatureUnion
 from sklearn.pipeline import Pipeline
@@ -132,7 +132,7 @@ pipeline = Pipeline([
             # Pipeline for pulling features from the post's subject line
             ('emojis', Pipeline([
                 ('selector', ItemSelector(key='emojis')),
-                ('tfidf', TfidfVectorizer( input='content', stop_words=None, min_df=1)),
+                ('vect', HashingVectorizer()),
             ])),
 
             # Pipeline for standard bag-of-words model for review
