@@ -31,10 +31,11 @@ def load_docs(source):
             words = review.split()
             document = (list(words), cat)
             documents.append(document)
-            if cat != 'Positive':
-                for i in range(5):
-                    # oversampling to correct bias
-                    documents.append(document)
+            # Commenting this because this might bias the distribution
+            # if cat != 'Positive':
+            #     for i in range(5):
+            #         # oversampling to correct bias
+            #         documents.append(document)
     return documents
 
 
@@ -159,6 +160,7 @@ def document_ngram_feature(doc, features, n):
 
 # Output classification in sklearn report format - 
 # https://scikit-learn.org/stable/modules/generated/sklearn.metrics.classification_report.html
+# The inputset is the documents and not the document features
 def get_classifier_metrics_report(classifier, inputset, features):
   refset, guesset= [], []
   for (d,c) in inputset:
@@ -179,10 +181,14 @@ for filter in feature_filters:
     # Train Naive Bayes classifier
     train_set = [
         (document_features(d, filter), c) for (d, c) in training_documents]
-    test_set = train_set = [
-        (document_features(d, filter), c) for (d, c) in training_documents]
+    test_set = testing_documents[2000:]
     # classifier = nltk.NaiveBayesClassifier.train(train_set)
     print(filter)
+
+    NB_classifier = nltk.NaiveBayesClassifier.train(train_set)
+    report = get_classifier_metrics_report(NB_classifier, test_set, filter)
+    print("Classification report for NaiveBayesian classifier %s\n" % (report))
+
     MNB_classifier = SklearnClassifier(MultinomialNB())
     MNB_classifier.train(train_set)
     report = get_classifier_metrics_report(MNB_classifier, test_set, filter)
@@ -191,7 +197,7 @@ for filter in feature_filters:
     BNB_classifier = SklearnClassifier(BernoulliNB())
     BNB_classifier.train(train_set)
     report = get_classifier_metrics_report(BNB_classifier, test_set, filter)
-    print("Classification report for MNB classifier %s\n" % (report))
+    print("Classification report for BNB classifier %s\n" % (report))
 
     LogisticRegression_classifier = SklearnClassifier(LogisticRegression())
     LogisticRegression_classifier.train(train_set)
