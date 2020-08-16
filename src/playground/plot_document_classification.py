@@ -47,6 +47,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.utils.extmath import density
 from sklearn import metrics
 
+from src.playground.feature_utils import load_docs
 
 # Display progress logs on stdout
 logging.basicConfig(level=logging.INFO,
@@ -100,16 +101,6 @@ print()
 # Load data from the training set
 # ------------------------------------
 
-def load_docs(source):
-    documents = {'data': [], 'target_names': []}
-    with open(source, 'r', encoding='utf-8') as inf:
-        # skipping header row
-        next(inf)
-        for line in inf:
-            (review, cat) = re.split('\t', line.strip())
-            documents['data'].append(review)
-            documents['target_names'].append(cat)
-    return documents
 
 data_train = load_docs("../../resources/data/tamil_train.tsv")
 data_test = load_docs("../../resources/data/tamil_dev.tsv")
@@ -295,8 +286,6 @@ results.append(benchmark(Pipeline([
 # (normalized) of each classifier.
 # 
 # 
-
-# In[23]:
 
 
 indices = np.arange(len(results))
