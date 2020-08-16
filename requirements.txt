@@ -4,3 +4,4 @@ emoji
 pattern3
 sklearn
 matplotlib
+snowballstemmer
