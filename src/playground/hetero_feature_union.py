@@ -42,6 +42,7 @@ from sklearn.metrics import classification_report
 from sklearn.pipeline import FeatureUnion
 from sklearn.pipeline import Pipeline
 from sklearn.svm import SVC
+from sklearn.linear_model import SGDClassifier
 
 import sys
 # Appeding our src directory to sys path so that we can import modules.
@@ -122,16 +123,22 @@ class FeatureExtractor(BaseEstimator, TransformerMixin):
 
 
 pipeline = Pipeline([
-    # Extract the subject & body
+    # Extract the review text & emojis
     ('reviewfeatures', FeatureExtractor()),
 
-    # Use FeatureUnion to combine the features from subject and body
+    # Use FeatureUnion to combine the features from emojis and text
     ('union', FeatureUnion(
         transformer_list=[
 
-            # Pipeline for pulling features from the post's subject line
+            # Pipeline for pulling features from the post's emojis
             ('emojis', Pipeline([
                 ('selector', ItemSelector(key='emojis')),
+                ('vect', HashingVectorizer()),
+            ])),
+
+            # Pipeline for pulling features from the post's emoji sentiment
+            ('emoji_sentiment', Pipeline([
+                ('selector', ItemSelector(key='emoji_sentiment')),
                 ('vect', HashingVectorizer()),
             ])),
 
@@ -153,14 +160,16 @@ pipeline = Pipeline([
 
         # weight components in FeatureUnion
         transformer_weights={
-            'emojis': 0.8,
+            'emoji_sentiment': 0.1,
+            'emojis': 0.1,
             'review_bow': 1.0,
-            'review_stats': 1.0,
+            'review_stats': 0.1,
         },
     )),
 
-    # Use a SVC classifier on the combined features
-    ('svc', SVC(kernel='linear')),
+    # Use a SVC/SGD classifier on the combined features
+    # ('svc', SVC(kernel='linear')),
+    ('sgd', SGDClassifier(alpha=.0001, max_iter=50, penalty='elasticnet')),
 ])
 
 # limit the list of categories to make running this example faster.
@@ -168,19 +177,6 @@ data_train = load_docs("../../resources/data/tamil_train.tsv")
 data_test = load_docs("../../resources/data/tamil_dev.tsv")
 print(data_train['data'][5], data_train['target_names'][4])
 print('data loaded')
-""" categories = ['alt.atheism', 'talk.religion.misc']
-train = fetch_20newsgroups(random_state=1,
-                           subset='train',
-                           categories=categories,
-                           )
-test = fetch_20newsgroups(random_state=1,
-                          subset='test',
-                          categories=categories,
-                          )
-data_train['data'] = train.data
-data_train['target_names'] = train.target
-data_test['data'] = test.data
-data_test['target_names'] = test.target """
 # order of labels in `target_names` can be different from `categories`
 target_names = data_train['target_names']
 
