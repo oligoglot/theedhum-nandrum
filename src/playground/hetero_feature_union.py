@@ -189,7 +189,7 @@ def get_pipeline(lang = 'ta'):
 
         # Use an SVC/SGD classifier on the combined features
         #('svc', SVC(kernel='linear')),
-        ('sgd', SGDClassifier(loss="log", penalty="elasticnet", max_iter=100, random_state=0)),
+        ('sgd', SGDClassifier(loss="log", penalty="elasticnet", max_iter=500, random_state=0)),
     ])
     return pipeline
 
