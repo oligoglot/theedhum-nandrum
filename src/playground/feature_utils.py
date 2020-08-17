@@ -5,15 +5,21 @@ import sys
 sys.path.append('../..')
 from  src.tn.lib.sentimoji import get_emoji_sentiment_rank
 
-def load_docs(source):
-    documents = {'data': [], 'target_names': []}
+def load_docs(source, mode='train'):
+    documents = {'data': [], 'target_names': [], 'ids': []}
     with open(source, 'r', encoding='utf-8') as inf:
         # skipping header row
         next(inf)
         for line in inf:
-            (review, cat) = re.split('\t', line.strip())
-            documents['data'].append(review)
-            documents['target_names'].append(cat)
+            if mode == 'predict':
+                (recid, review) = re.split('\t', line.strip())
+                documents['data'].append(review)
+                documents['ids'].append(recid)
+            else:
+                # both train and test have this format
+                (review, cat) = re.split('\t', line.strip())
+                documents['data'].append(review)
+                documents['target_names'].append(cat)
     return documents
     
 def get_all_emojis():

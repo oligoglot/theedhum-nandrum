@@ -13,9 +13,6 @@ from __future__ import print_function
 import numpy as np
 
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.datasets import fetch_20newsgroups
-from sklearn.datasets.twenty_newsgroups import strip_newsgroup_footer
-from sklearn.datasets.twenty_newsgroups import strip_newsgroup_quoting
 from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer, HashingVectorizer, CountVectorizer
@@ -109,25 +106,34 @@ class FeatureExtractor(BaseEstimator, TransformerMixin):
 
         return features
 
-def fit_predict_measure(train_file, test_file, lang = 'ta'):
+def fit_predict_measure(mode, train_file, test_file, lang = 'ta'):
     print(train_file, test_file)
-    data_train = load_docs(train_file)
-    data_test = load_docs(test_file)
+    data_train = load_docs(train_file, mode='train')
+    data_test = load_docs(test_file, mode=mode)
     print('data loaded')
     target_names = data_train['target_names']
 
     pipeline = get_pipeline(lang)
     pipeline.fit(data_train['data'], data_train['target_names'])
     y = pipeline.predict(data_test['data'])
-    idx = 0
-    for v in data_test['data']:
-        if (y[idx] == data_test['target_names'][idx]):
-            print("Right : {} -> Prediction : {} -> Original : {}".format(v, y[idx], data_test['target_names'][idx]))
-        else:
-            print("Wrong : {} -> Prediction : {} -> Original : {}".format(v, y[idx], data_test['target_names'][idx]))
-        idx += 1
+    print(len(y))
+    assert(len(data_test['data'])==len(y))
+    if mode == 'test':
+        idx = 0
+        for v in data_test['data']:
+            if (y[idx] == data_test['target_names'][idx]):
+                print("Right : {} -> Prediction : {} -> Original : {}".format(v, y[idx], data_test['target_names'][idx]))
+            else:
+                print("Wrong : {} -> Prediction : {} -> Original : {}".format(v, y[idx], data_test['target_names'][idx]))
+            idx += 1
 
-    print(classification_report(y, data_test['target_names']))
+        print(classification_report(y, data_test['target_names']))
+    if mode == 'predict':
+        with open(f'theedhumnandrum_{lang}.tsv', 'w') as outf:
+            for idx, review, label in zip(data_test['ids'], data_test['data'], y):
+                print(idx)
+                outf.write('\t'.join((idx, review, label)) + '\n')
+        print(f'predict data written to theedhumnandrum_{lang}.tsv')
 
 def get_pipeline(lang = 'ta'):
     pipeline = Pipeline([
@@ -183,15 +189,17 @@ def get_pipeline(lang = 'ta'):
 
         # Use an SVC/SGD classifier on the combined features
         #('svc', SVC(kernel='linear')),
-        ('sgd', SGDClassifier(loss="log", penalty="elasticnet", max_iter=70, random_state=0)),
+        ('sgd', SGDClassifier(loss="log", penalty="elasticnet", max_iter=100, random_state=0)),
     ])
     return pipeline
 
-
-train_file = '../../resources/data/tamil_train.tsv'
-test_file = '../../resources/data/tamil_dev.tsv'
-fit_predict_measure(train_file, test_file, lang = 'ta')
-
-train_file = '../../resources/data/malayalam_train.tsv'
-test_file = '../../resources/data/malayalam_dev.tsv'
-fit_predict_measure(train_file, test_file, lang = 'ml')
+if __name__ == "__main__":
+    args = sys.argv
+    if len(args) < 5:
+        print('Your command should be:')
+        print('python hetero_feature_union.py <mode> <language code> <training file path> <test file path>')
+        print('mode:predict/test, language: ta/ml')
+        sys.exit()
+    
+    mode, lang, train_file, test_file = args[1:5]
+    fit_predict_measure(mode, train_file, test_file, lang = lang)
