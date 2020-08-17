@@ -30,7 +30,7 @@ import sys
 sys.path.append('../..')
 from src.playground.feature_utils import load_docs, get_emojis_from_text
 sys.path.append('../../src/extern/indic_nlp_library/')
-from src.extern.indic_nlp_library.indicnlp.normalize.indic_normalize import TamilNormalizer, MalayalamNormalizer
+from src.extern.indic_nlp_library.indicnlp.normalize.indic_normalize import BaseNormalizer
 
 class ItemSelector(BaseEstimator, TransformerMixin):
     """For data grouped by feature, select subset of data at a provided key.
@@ -91,6 +91,7 @@ class FeatureExtractor(BaseEstimator, TransformerMixin):
     """
     def __init__(self, lang = 'ta'):
         self.lang = lang
+        self.normalizer = BaseNormalizer(lang)
         super().__init__()
 
     def fit(self, x, y=None):
@@ -100,7 +101,7 @@ class FeatureExtractor(BaseEstimator, TransformerMixin):
         features = np.recarray(shape=(len(reviews),),
                                dtype=[('review', object), ('emojis', object), ('emoji_sentiment', object)])
         for i, review in enumerate(reviews):       
-            features['review'][i] = normalizer[self.lang].normalize(text = review)
+            features['review'][i] = self.normalizer.normalize(text = review)
 
             emojis, sentiment = get_emojis_from_text(review)
             features['emojis'][i] = ' '.join(emojis)
@@ -186,9 +187,6 @@ def get_pipeline(lang = 'ta'):
     ])
     return pipeline
 
-normalizer = {}
-normalizer['ta'] = TamilNormalizer()
-normalizer['ml'] = MalayalamNormalizer()
 
 train_file = '../../resources/data/tamil_train.tsv'
 test_file = '../../resources/data/tamil_dev.tsv'
