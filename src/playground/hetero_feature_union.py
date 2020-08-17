@@ -121,6 +121,24 @@ class FeatureExtractor(BaseEstimator, TransformerMixin):
 
         return features
 
+def fit_predict_measure(pipeline, train_file, test_file):
+    print(train_file, test_file)
+    data_train = load_docs(train_file)
+    data_test = load_docs(test_file)
+    print('data loaded')
+    target_names = data_train['target_names']
+
+    pipeline.fit(data_train['data'], data_train['target_names'])
+    y = pipeline.predict(data_test['data'])
+    idx = 0
+    for v in data_test['data']:
+        if (y[idx] == data_test['target_names'][idx]):
+            print("Right : {} -> Prediction : {} -> Original : {}".format(v, y[idx], data_test['target_names'][idx]))
+        else:
+            print("Wrong : {} -> Prediction : {} -> Original : {}".format(v, y[idx], data_test['target_names'][idx]))
+        idx += 1
+
+    print(classification_report(y, data_test['target_names']))
 
 pipeline = Pipeline([
     # Extract the review text & emojis
@@ -129,12 +147,6 @@ pipeline = Pipeline([
     # Use FeatureUnion to combine the features from emojis and text
     ('union', FeatureUnion(
         transformer_list=[
-
-            # Pipeline for pulling features from the post's emojis
-            # ('emojis', Pipeline([
-            #     ('selector', ItemSelector(key='emojis')),
-            #     ('vect', HashingVectorizer()),
-            # ])),
 
             # Pipeline for standard bag-of-words model for review
             ('emojis', Pipeline([
@@ -179,27 +191,15 @@ pipeline = Pipeline([
         },
     )),
 
-    # Use a SVC/SGD classifier on the combined features
+    # Use an SVC/SGD classifier on the combined features
     #('svc', SVC(kernel='linear')),
-    ('sgd', SGDClassifier(loss="log", penalty="elasticnet",max_iter=70, random_state=0)),
+    ('sgd', SGDClassifier(loss="log", penalty="elasticnet", max_iter=70, random_state=0)),
 ])
 
-# limit the list of categories to make running this example faster.
-data_train = load_docs("../../resources/data/tamil_train.tsv")
-data_test = load_docs("../../resources/data/tamil_dev.tsv")
-print(data_train['data'][5], data_train['target_names'][4])
-print('data loaded')
-# order of labels in `target_names` can be different from `categories`
-target_names = data_train['target_names']
+train_file = '../../resources/data/tamil_train.tsv'
+test_file = '../../resources/data/tamil_dev.tsv'
+fit_predict_measure(pipeline, train_file, test_file)
 
-pipeline.fit(data_train['data'], data_train['target_names'])
-y = pipeline.predict(data_test['data'])
-idx = 0
-for v in data_test['data']:
-  if (y[idx] == data_test['target_names'][idx]):
-    print("Right : {} -> Prediction : {} -> Original : {}".format(v, y[idx], data_test['target_names'][idx]))
-  else:
-    print("Wrong : {} -> Prediction : {} -> Original : {}".format(v, y[idx], data_test['target_names'][idx]))
-  idx += 1
-
-print(classification_report(y, data_test['target_names']))
+train_file = '../../resources/data/malayalam_train.tsv'
+test_file = '../../resources/data/malayalam_dev.tsv'
+fit_predict_measure(pipeline, train_file, test_file)
