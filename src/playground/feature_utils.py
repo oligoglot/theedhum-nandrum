@@ -52,7 +52,8 @@ def document_emoji_feature(document_words, features):
 
 def get_emojis_from_text(text):
     score = 0.0
-    emojis = []
+    # Putting in a random emoji to avoid empty data
+    emojis = ["🦻"]
     for c in text:
         if c in UNICODE_EMOJI:
             emojis.append(c)

@@ -37,7 +37,7 @@ from sklearn.datasets.twenty_newsgroups import strip_newsgroup_footer
 from sklearn.datasets.twenty_newsgroups import strip_newsgroup_quoting
 from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction import DictVectorizer
-from sklearn.feature_extraction.text import TfidfVectorizer, HashingVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer, HashingVectorizer, CountVectorizer
 from sklearn.metrics import classification_report
 from sklearn.pipeline import FeatureUnion
 from sklearn.pipeline import Pipeline
@@ -131,9 +131,15 @@ pipeline = Pipeline([
         transformer_list=[
 
             # Pipeline for pulling features from the post's emojis
+            # ('emojis', Pipeline([
+            #     ('selector', ItemSelector(key='emojis')),
+            #     ('vect', HashingVectorizer()),
+            # ])),
+
+            # Pipeline for standard bag-of-words model for review
             ('emojis', Pipeline([
                 ('selector', ItemSelector(key='emojis')),
-                ('vect', HashingVectorizer()),
+                ('tfidf', TfidfVectorizer(token_pattern=r'[^\s]+', stop_words=None, max_df=0.5, min_df=1)),
             ])),
 
             # Pipeline for pulling features from the post's emoji sentiment
@@ -156,20 +162,26 @@ pipeline = Pipeline([
                 ('vect', DictVectorizer()),  # list of dicts -> feature matrix
             ])),
 
+             # Pipeline for standard bag-of-words model for review
+            ('review_ngram', Pipeline([
+                ('selector', ItemSelector(key='review')),
+                ('tfidf', CountVectorizer(ngram_range=(1, 3))),
+            ])),
+
         ],
 
         # weight components in FeatureUnion
-        transformer_weights={
-            'emoji_sentiment': 0.1,
-            'emojis': 0.1,
+        transformer_weights={ 
+            'emoji_sentiment': 0.6,
+            'emojis': 0.3,
             'review_bow': 1.0,
-            'review_stats': 0.1,
+            'review_ngram': 0.5
         },
     )),
 
     # Use a SVC/SGD classifier on the combined features
-    # ('svc', SVC(kernel='linear')),
-    ('sgd', SGDClassifier(alpha=.0001, max_iter=50, penalty='elasticnet')),
+    #('svc', SVC(kernel='linear')),
+    ('sgd', SGDClassifier(loss="log", penalty="elasticnet",max_iter=70, random_state=0)),
 ])
 
 # limit the list of categories to make running this example faster.
@@ -182,4 +194,12 @@ target_names = data_train['target_names']
 
 pipeline.fit(data_train['data'], data_train['target_names'])
 y = pipeline.predict(data_test['data'])
+idx = 0
+for v in data_test['data']:
+  if (y[idx] == data_test['target_names'][idx]):
+    print("Right : {} -> Prediction : {} -> Original : {}".format(v, y[idx], data_test['target_names'][idx]))
+  else:
+    print("Wrong : {} -> Prediction : {} -> Original : {}".format(v, y[idx], data_test['target_names'][idx]))
+  idx += 1
+
 print(classification_report(y, data_test['target_names']))
