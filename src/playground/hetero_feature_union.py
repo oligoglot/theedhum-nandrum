@@ -3,25 +3,6 @@ Borrows from https://scikit-learn.org/0.18/auto_examples/hetero_feature_union.ht
 =============================================
 Feature Union with Heterogeneous Data Sources
 =============================================
-
-Datasets can often contain components of that require different feature
-extraction and processing pipelines.  This scenario might occur when:
-
-1. Your dataset consists of heterogeneous data types (e.g. raster images and
-   text captions)
-2. Your dataset is stored in a Pandas DataFrame and different columns
-   require different processing pipelines.
-
-This example demonstrates how to use
-:class:`sklearn.feature_extraction.FeatureUnion` on a dataset containing
-different types of features.  We use the 20-newsgroups dataset and compute
-standard bag-of-words features for the subject line and body in separate
-pipelines as well as ad hoc features on the body. We combine them (with
-weights) using a FeatureUnion and finally train a classifier on the combined
-set of features.
-
-The choice of features is not particularly helpful, but serves to illustrate
-the technique.
 """
 
 # Author: Matt Terry <matt.terry@gmail.com>
@@ -48,6 +29,8 @@ import sys
 # Appeding our src directory to sys path so that we can import modules.
 sys.path.append('../..')
 from src.playground.feature_utils import load_docs, get_emojis_from_text
+sys.path.append('../../src/extern/indic_nlp_library/')
+from src.extern.indic_nlp_library.indicnlp.normalize.indic_normalize import TamilNormalizer, MalayalamNormalizer
 
 class ItemSelector(BaseEstimator, TransformerMixin):
     """For data grouped by feature, select subset of data at a provided key.
@@ -106,6 +89,10 @@ class FeatureExtractor(BaseEstimator, TransformerMixin):
     Takes a sequence of strings and produces a dict of values.  Keys are
     `review`, `emojis`, and `emoji-sentiment`.
     """
+    def __init__(self, lang = 'ta'):
+        self.lang = lang
+        super().__init__()
+
     def fit(self, x, y=None):
         return self
 
@@ -113,7 +100,7 @@ class FeatureExtractor(BaseEstimator, TransformerMixin):
         features = np.recarray(shape=(len(reviews),),
                                dtype=[('review', object), ('emojis', object), ('emoji_sentiment', object)])
         for i, review in enumerate(reviews):       
-            features['review'][i] = review
+            features['review'][i] = normalizer[self.lang].normalize(text = review)
 
             emojis, sentiment = get_emojis_from_text(review)
             features['emojis'][i] = ' '.join(emojis)
@@ -121,13 +108,14 @@ class FeatureExtractor(BaseEstimator, TransformerMixin):
 
         return features
 
-def fit_predict_measure(pipeline, train_file, test_file):
+def fit_predict_measure(train_file, test_file, lang = 'ta'):
     print(train_file, test_file)
     data_train = load_docs(train_file)
     data_test = load_docs(test_file)
     print('data loaded')
     target_names = data_train['target_names']
 
+    pipeline = get_pipeline(lang)
     pipeline.fit(data_train['data'], data_train['target_names'])
     y = pipeline.predict(data_test['data'])
     idx = 0
@@ -140,66 +128,72 @@ def fit_predict_measure(pipeline, train_file, test_file):
 
     print(classification_report(y, data_test['target_names']))
 
-pipeline = Pipeline([
-    # Extract the review text & emojis
-    ('reviewfeatures', FeatureExtractor()),
+def get_pipeline(lang = 'ta'):
+    pipeline = Pipeline([
+        # Extract the review text & emojis
+        ('reviewfeatures', FeatureExtractor(lang)),
 
-    # Use FeatureUnion to combine the features from emojis and text
-    ('union', FeatureUnion(
-        transformer_list=[
+        # Use FeatureUnion to combine the features from emojis and text
+        ('union', FeatureUnion(
+            transformer_list=[
 
-            # Pipeline for standard bag-of-words model for review
-            ('emojis', Pipeline([
-                ('selector', ItemSelector(key='emojis')),
-                ('tfidf', TfidfVectorizer(token_pattern=r'[^\s]+', stop_words=None, max_df=0.5, min_df=1)),
-            ])),
+                # Pipeline for standard bag-of-words model for review
+                ('emojis', Pipeline([
+                    ('selector', ItemSelector(key='emojis')),
+                    ('tfidf', TfidfVectorizer(token_pattern=r'[^\s]+', stop_words=None, max_df=0.5, min_df=1)),
+                ])),
 
-            # Pipeline for pulling features from the post's emoji sentiment
-            ('emoji_sentiment', Pipeline([
-                ('selector', ItemSelector(key='emoji_sentiment')),
-                ('vect', HashingVectorizer()),
-            ])),
+                # Pipeline for pulling features from the post's emoji sentiment
+                ('emoji_sentiment', Pipeline([
+                    ('selector', ItemSelector(key='emoji_sentiment')),
+                    ('vect', HashingVectorizer()),
+                ])),
 
-            # Pipeline for standard bag-of-words model for review
-            ('review_bow', Pipeline([
-                ('selector', ItemSelector(key='review')),
-                ('tfidf', TfidfVectorizer( input='content', stop_words=None, sublinear_tf=True, max_df=0.5, min_df=1)),
-                ('best', TruncatedSVD(n_components=50)),
-            ])),
+                # Pipeline for standard bag-of-words model for review
+                ('review_bow', Pipeline([
+                    ('selector', ItemSelector(key='review')),
+                    ('tfidf', TfidfVectorizer( input='content', stop_words=None, sublinear_tf=True, max_df=0.5, min_df=1)),
+                    ('best', TruncatedSVD(n_components=50)),
+                ])),
 
-            # Pipeline for pulling ad hoc features from review text
-            ('review_stats', Pipeline([
-                ('selector', ItemSelector(key='review')),
-                ('stats', TextStats()),  # returns a list of dicts
-                ('vect', DictVectorizer()),  # list of dicts -> feature matrix
-            ])),
+                # Pipeline for pulling ad hoc features from review text
+                ('review_stats', Pipeline([
+                    ('selector', ItemSelector(key='review')),
+                    ('stats', TextStats()),  # returns a list of dicts
+                    ('vect', DictVectorizer()),  # list of dicts -> feature matrix
+                ])),
 
-             # Pipeline for standard bag-of-words model for review
-            ('review_ngram', Pipeline([
-                ('selector', ItemSelector(key='review')),
-                ('tfidf', CountVectorizer(ngram_range=(1, 3))),
-            ])),
+                # Pipeline for standard bag-of-words model for review
+                ('review_ngram', Pipeline([
+                    ('selector', ItemSelector(key='review')),
+                    ('tfidf', CountVectorizer(ngram_range=(1, 3))),
+                ])),
 
-        ],
+            ],
 
-        # weight components in FeatureUnion
-        transformer_weights={ 
-            'emoji_sentiment': 0.6,
-            'emojis': 0.3,
-            'review_bow': 1.0,
-            'review_ngram': 0.5
-        },
-    )),
+            # weight components in FeatureUnion
+            transformer_weights={ 
+                'emoji_sentiment': 0.6,
+                'emojis': 0.3,
+                'review_bow': 1.0,
+                'review_ngram': 0.5
+            },
+        )),
 
-    # Use an SVC/SGD classifier on the combined features
-    #('svc', SVC(kernel='linear')),
-    ('sgd', SGDClassifier(loss="log", penalty="elasticnet", max_iter=70, random_state=0)),
-])
+        # Use an SVC/SGD classifier on the combined features
+        #('svc', SVC(kernel='linear')),
+        ('sgd', SGDClassifier(loss="log", penalty="elasticnet", max_iter=70, random_state=0)),
+    ])
+    return pipeline
+
+normalizer = {}
+normalizer['ta'] = TamilNormalizer()
+normalizer['ml'] = MalayalamNormalizer()
 
 train_file = '../../resources/data/tamil_train.tsv'
 test_file = '../../resources/data/tamil_dev.tsv'
-fit_predict_measure(pipeline, train_file, test_file)
+fit_predict_measure(train_file, test_file, lang = 'ta')
 
 train_file = '../../resources/data/malayalam_train.tsv'
 test_file = '../../resources/data/malayalam_dev.tsv'
-fit_predict_measure(pipeline, train_file, test_file)
+fit_predict_measure(train_file, test_file, lang = 'ml')
