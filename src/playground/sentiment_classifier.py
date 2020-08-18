@@ -142,6 +142,22 @@ def fit_predict_measure(mode, train_file, test_file, lang = 'ta'):
 def get_pipeline(lang = 'ta'):
     clf = SGDClassifier()
 
+    if lang == 'ta':
+        chosen_weights={ 
+            'emoji_sentiment': 0.6,
+            'emojis': 0.3,
+            'review_bow': 1.0,
+            'review_ngram': 0.5
+        }
+
+    if lang == 'ml':
+        chosen_weights={ 
+            'emoji_sentiment': 0.6,
+            'emojis': 0.4,
+            'review_bow': 1.0,
+            'review_ngram': 0.5
+        }
+
     """ distributions = dict(
         penalty=['l1', 'l2', 'elasticnet'],
         alpha=uniform(loc=1e-6, scale=1e-4)
@@ -190,12 +206,7 @@ def get_pipeline(lang = 'ta'):
             ],
 
             # weight components in FeatureUnion
-            transformer_weights={ 
-                'emoji_sentiment': 0.6,
-                'emojis': 0.3,
-                'review_bow': 1.0,
-                'review_ngram': 0.5
-            },
+            transformer_weights=chosen_weights,
         )),
 
         # Use an SVC/SGD classifier on the combined features
@@ -209,7 +220,7 @@ if __name__ == "__main__":
     args = sys.argv
     if len(args) < 5:
         print('Your command should be:')
-        print('python hetero_feature_union.py <mode> <language code> <training file path> <test file path>')
+        print('python sentiment_classifier.py <mode> <language code> <training file path> <test file path>')
         print('mode:predict/test, language: ta/ml')
         sys.exit()
     

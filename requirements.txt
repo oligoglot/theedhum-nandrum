@@ -5,3 +5,4 @@ pattern3
 sklearn
 matplotlib
 snowballstemmer
+googletrans
