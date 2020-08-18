@@ -133,11 +133,11 @@ def fit_predict_measure(mode, train_file, test_file, lang = 'ta'):
 
         print(classification_report(y, data_test['target_names']))
     if mode == 'predict':
-        with open(f'theedhumnandrum_{lang}.tsv', 'w') as outf:
+        with open(f, 'theedhumnandrum_{lang}.tsv', 'w') as outf:
             for idx, review, label in zip(data_test['ids'], data_test['data'], y):
                 print(idx)
                 outf.write('\t'.join((idx, review, label)) + '\n')
-        print(f'predict data written to theedhumnandrum_{lang}.tsv')
+        print(f, 'predict data written to theedhumnandrum_{lang}.tsv')
 
 def get_pipeline(lang = 'ta'):
     clf = SGDClassifier()
