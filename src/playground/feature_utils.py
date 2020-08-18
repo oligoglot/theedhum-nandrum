@@ -87,9 +87,9 @@ def get_language(text):
       # if (language.confidence > 0.7): return language.lang
       # return "unknown"
 
-def detect_lang_and_store(input, outputfile):
-  with open(outputfile, "w") as f:
-    for text in input:
+def detect_lang_and_store(inputfile, outputfile):
+  with open(inputfile) as inf, open(outputfile, "w") as f:
+    for text in inputfile:
       # Intentional re-init of object - https://stackoverflow.com/questions/49497391/googletrans-api-error-expecting-value-line-1-column-1-char-0
       translator = Translator()
       try:
@@ -110,4 +110,7 @@ if __name__ == "__main__":
     # document_words = 'கலக்கல் 🤩'
     # document_emoji_feature(document_words, features)
     # print(features)
-    detect_lang_and_store(["idhu enna maayam", "sundari kannaal oru sedhi", "malalayali aano", "கலக்கல்", "nandri hai"], "/tmp/languages_tmp.tsv")
+    with open('../../resources/data/alltexts.txt', 'r') as inf:
+        lines = inf
+    # detect_lang_and_store(["idhu enna maayam", "sundari kannaal oru sedhi", "malalayali aano", "கலக்கல்", "nandri hai"], "/tmp/languages_tmp.tsv")
+    detect_lang_and_store('../../resources/data/alltexts.txt', '../../resources/data/alltextslang.txt')
