@@ -211,7 +211,7 @@ def get_pipeline(lang = 'ta', datalen = 1000):
         # Use an SVC/SGD classifier on the combined features
         #('svc', SVC(kernel='linear')),
         #the value for max_iter is based on suggestion here - https://scikit-learn.org/stable/modules/sgd.html#tips-on-practical-use
-        ('sgd', SGDClassifier(loss="modified_huber", penalty="elasticnet", max_iter=np.ceil(10**6/datalen), random_state=3000)),
+        ('sgd', SGDClassifier(loss="log", penalty="elasticnet", max_iter=np.ceil(10**6/datalen), random_state=3000)),
         # ('rsrch', RandomizedSearchCV(estimator=clf, param_distributions=distributions, cv=5, n_iter=5)),
     ])
     return pipeline
