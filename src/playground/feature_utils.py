@@ -89,7 +89,7 @@ def get_language(text):
 
 def detect_lang_and_store(inputfile, outputfile):
   with open(inputfile) as inf, open(outputfile, "w") as f:
-    for text in inputfile:
+    for text in inf:
       # Intentional re-init of object - https://stackoverflow.com/questions/49497391/googletrans-api-error-expecting-value-line-1-column-1-char-0
       translator = Translator()
       try:
