@@ -21,6 +21,8 @@ from sklearn.pipeline import FeatureUnion
 from sklearn.pipeline import Pipeline
 from sklearn.svm import SVC
 from sklearn.linear_model import SGDClassifier
+from sklearn.model_selection import RandomizedSearchCV
+from scipy.stats import uniform
 
 import sys
 # Appeding our src directory to sys path so that we can import modules.
@@ -115,6 +117,8 @@ def fit_predict_measure(mode, train_file, test_file, lang = 'ta'):
 
     pipeline = get_pipeline(lang)
     pipeline.fit(data_train['data'], data_train['target_names'])
+    """ params = pipeline.get_params(deep=True)
+    print(params['rsrch__estimator__alpha'], params['rsrch__estimator__penalty']) """
     y = pipeline.predict(data_test['data'])
     print(len(y))
     assert(len(data_test['data'])==len(y))
@@ -136,6 +140,13 @@ def fit_predict_measure(mode, train_file, test_file, lang = 'ta'):
         print(f'predict data written to theedhumnandrum_{lang}.tsv')
 
 def get_pipeline(lang = 'ta'):
+    clf = SGDClassifier()
+
+    """ distributions = dict(
+        penalty=['l1', 'l2', 'elasticnet'],
+        alpha=uniform(loc=1e-6, scale=1e-4)
+    ) """
+
     pipeline = Pipeline([
         # Extract the review text & emojis
         ('reviewfeatures', FeatureExtractor(lang)),
@@ -190,6 +201,7 @@ def get_pipeline(lang = 'ta'):
         # Use an SVC/SGD classifier on the combined features
         #('svc', SVC(kernel='linear')),
         ('sgd', SGDClassifier(loss="log", penalty="elasticnet", max_iter=500, random_state=0)),
+        # ('rsrch', RandomizedSearchCV(estimator=clf, param_distributions=distributions, cv=5, n_iter=5)),
     ])
     return pipeline
 
