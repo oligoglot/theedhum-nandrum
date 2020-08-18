@@ -1,6 +1,8 @@
 from emoji import UNICODE_EMOJI
 import re
 import sys
+from googletrans import Translator
+from langdetect import detect
 # Appeding our src directory to sys path so that we can import modules.
 sys.path.append('../..')
 from  src.tn.lib.sentimoji import get_emoji_sentiment_rank
@@ -70,11 +72,36 @@ def get_emojis_from_text(text):
         label = 'Neutral'
     return ((emojis, label))
 
+def get_language(text):
+      #translator = Translator()
+      try:
+        return(detect(text))
+      except:
+        return("unknown")
+      # if (language.confidence > 0.7): return language.lang
+      # return "unknown"
+
+def detect_lang_and_store(input, outputfile):
+  with open(outputfile, "w") as f:
+    for text in input:
+      # Intentional re-init of object - https://stackoverflow.com/questions/49497391/googletrans-api-error-expecting-value-line-1-column-1-char-0
+      translator = Translator()
+      try:
+        language = translator.detect(text)
+        f.write(text + "\t" + language.lang + "\t" + str(language.confidence) + "\n")
+      except Exception as e:
+        print(str(e))
+        continue
+  f.close()
+
+
+
 if __name__ == "__main__":
-    features = {}
-    document_words = 'ugh 🤢'
-    document_emoji_feature(document_words, features)
-    print(features)
-    document_words = 'கலக்கல் 🤩'
-    document_emoji_feature(document_words, features)
-    print(features)
+    # features = {}
+    # document_words = 'ugh 🤢'
+    # document_emoji_feature(document_words, features)
+    # print(features)
+    # document_words = 'கலக்கல் 🤩'
+    # document_emoji_feature(document_words, features)
+    # print(features)
+    detect_lang_and_store(["idhu enna maayam", "sundari kannaal oru sedhi", "malalayali aano", "கலக்கல்", "nandri hai"], "/tmp/languages_tmp.tsv")
