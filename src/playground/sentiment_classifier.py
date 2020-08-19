@@ -81,15 +81,6 @@ class TextStats(BaseEstimator, TransformerMixin):
                  'num_sentences': text.count('.')}
                 for text in reviews]
 
-class Langfeatures(BaseEstimator, TransformerMixin):
-    """Extract features from each lang tag for DictVectorizer"""
-
-    def fit(self, x, y=None):
-        return self
-
-    def transform(self, lang_tag):
-        return [{item[0]:item[1]} for item in lang_tag.items()] 
-
 class FeatureExtractor(BaseEstimator, TransformerMixin):
     """Extract review text, emojis and emoji sentiment.
 
@@ -107,11 +98,11 @@ class FeatureExtractor(BaseEstimator, TransformerMixin):
         with open(mapfile, 'r') as mapf:
             for line in mapf:
                 text, lang, conf = line.rstrip().split('\t')
-                lmap[text] = {'lang':lang, 'conf':float(conf)}
+                lmap[text] = (lang, float(conf))
         return lmap
                     
     def get_language_tag(self, text):
-        return self.lmap.get(text, {'lang':'unknown', 'conf': 0.0})
+        return self.lmap.get(text, ('unknown', 0.0))
 
     def fit(self, x, y=None):
         return self
@@ -126,23 +117,17 @@ class FeatureExtractor(BaseEstimator, TransformerMixin):
             features['emojis'][i] = ' '.join(emojis)
             features['emoji_sentiment'][i] = sentiment
 
-            lang_feature = {}
-            print(lang_feature)
-            lang_feature = self.get_language_tag(review)
-            print(lang_feature)
-            if lang_feature['lang'] == self.lang:
+            lang, conf = self.get_language_tag(review.strip())
+            if lang == self.lang or lang == (self.lang + 'en'):
                 # google agrees with some confidence
-                lang_feature['agreement'] = 1
-            elif lang_feature['conf'] < 0.5:
+                agreement = 1
+            elif conf < 0.5:
                 # google says not-tamil, but weakly
-                lang_feature['agreement'] = 0.5
+                agreement = 0.5
             else:
                 # google clearly says not-tamil
-                lang_feature['agreement'] = 0
-                print('I was here')
-            # leave confidence out after flagging above
-            lang_feature.pop('conf')
-            features['lang_tag'][i] = lang_feature
+                agreement = 0
+            features['lang_tag'][i] = {'lang': lang, 'agreement': agreement}
         return features
 
 def fit_predict_measure(mode, train_file, test_file, lang = 'ta'):
@@ -184,7 +169,7 @@ def get_pipeline(lang = 'ta', datalen = 1000):
             'emojis': 0.8, #higher value seems to improve negative ratings
             'review_bow': 1.0,
             'review_ngram': 1.0,
-            'lang_tag': 0.5,
+            'lang_tag': 0.6,
         }
 
     if lang == 'ml':
@@ -193,7 +178,7 @@ def get_pipeline(lang = 'ta', datalen = 1000):
             'emojis': 0.4,
             'review_bow': 1.0,
             'review_ngram': 0.5,
-            'lang_tag': 0.5,
+            'lang_tag': 0.6,
         }
 
     """ distributions = dict(
@@ -245,7 +230,6 @@ def get_pipeline(lang = 'ta', datalen = 1000):
                 # Pipeline for pulling langtag features
                 ('lang_tag', Pipeline([
                     ('selector', ItemSelector(key='lang_tag')),
-                    ('stats', Langfeatures()),  # returns a list of dicts
                     ('vect', DictVectorizer()),  # list of dicts -> feature matrix
                 ])),
 
@@ -258,7 +242,7 @@ def get_pipeline(lang = 'ta', datalen = 1000):
         # Use an SVC/SGD classifier on the combined features
         #('svc', SVC(kernel='linear')),
         #the value for max_iter is based on suggestion here - https://scikit-learn.org/stable/modules/sgd.html#tips-on-practical-use
-        ('sgd', SGDClassifier(loss="log", penalty="elasticnet", max_iter=np.ceil(10**6/datalen), random_state=3000)),
+        ('sgd', SGDClassifier(loss="log", penalty="elasticnet", max_iter=np.ceil(10**6/datalen), random_state=0)),
         # ('rsrch', RandomizedSearchCV(estimator=clf, param_distributions=distributions, cv=5, n_iter=5)),
     ])
     return pipeline
