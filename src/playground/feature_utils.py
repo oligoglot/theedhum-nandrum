@@ -101,7 +101,18 @@ def detect_lang_and_store(inputfile, outputfile):
         continue
   f.close()
 
+def load_language_maps(mapfile):
+    if not hasattr(load_language_maps, "lmap"):
+        load_language_maps.lmap = {}
+        with open(mapfile, 'r') as mapf:
+            for line in mapf:
+                text, lang, conf = line.rstrip().split('\t')
+                load_language_maps.lmap[text] = {'lang':lang, 'conf':conf}
+    return load_language_maps.lmap
 
+def get_language_tag(text):
+    lmap = load_language_maps('../../resources/data/alltextslang.txt')
+    return lmap.get(text, {'lang':'unknown', 'conf': '0.0'})
 
 if __name__ == "__main__":
     # features = {}

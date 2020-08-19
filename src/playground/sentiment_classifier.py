@@ -27,7 +27,7 @@ from scipy.stats import uniform
 import sys
 # Appeding our src directory to sys path so that we can import modules.
 sys.path.append('../..')
-from src.playground.feature_utils import load_docs, get_emojis_from_text
+from src.playground.feature_utils import load_docs, get_emojis_from_text, get_language_tag
 sys.path.append('../../src/extern/indic_nlp_library/')
 from src.extern.indic_nlp_library.indicnlp.normalize.indic_normalize import BaseNormalizer
 
@@ -97,8 +97,8 @@ class FeatureExtractor(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, reviews):
-        features = np.recarray(shape=(len(reviews),),
-                               dtype=[('review', object), ('emojis', object), ('emoji_sentiment', object)])
+        features = np.recarray(shape=(len(reviews),), dtype=[('review', object), ('emojis', object),
+                                                            ('emoji_sentiment', object), ('lang_tag', object)],)
         for i, review in enumerate(reviews):       
             features['review'][i] = self.normalizer.normalize(text = review)
 
@@ -106,6 +106,7 @@ class FeatureExtractor(BaseEstimator, TransformerMixin):
             features['emojis'][i] = ' '.join(emojis)
             features['emoji_sentiment'][i] = sentiment
 
+            features['lang_tag'][i] = get_language_tag(review)
         return features
 
 def fit_predict_measure(mode, train_file, test_file, lang = 'ta'):
@@ -145,7 +146,7 @@ def get_pipeline(lang = 'ta', datalen = 1000):
         chosen_weights={ 
             'emoji_sentiment': 0.6,
             'emojis': 0.8, #higher value seems to improve negative ratings
-            'review_bow': 0.0,
+            'review_bow': 1.0,
             'review_ngram': 1.0
         }
 
@@ -153,8 +154,8 @@ def get_pipeline(lang = 'ta', datalen = 1000):
         chosen_weights={ 
             'emoji_sentiment': 0.6,
             'emojis': 0.4,
-            'review_bow': 0.0,
-            'review_ngram': 1.0
+            'review_bow': 1.0,
+            'review_ngram': 0.5
         }
 
     """ distributions = dict(
@@ -173,7 +174,7 @@ def get_pipeline(lang = 'ta', datalen = 1000):
                 # Pipeline for standard bag-of-words model for review
                 ('emojis', Pipeline([
                     ('selector', ItemSelector(key='emojis')),
-                    ('tfidf', TfidfVectorizer(token_pattern=r'[^\s]+', stop_words=None, max_df=0.4, min_df=2, norm='l2', sublinear_tf=True)),
+                    ('tfidf', TfidfVectorizer(token_pattern=r'[^\s]+', stop_words=None, max_df=0.4, min_df=2)),
                 ])),
 
                 # Pipeline for pulling features from the post's emoji sentiment
@@ -199,7 +200,8 @@ def get_pipeline(lang = 'ta', datalen = 1000):
                 # Pipeline for standard bag-of-words model for review
                 ('review_ngram', Pipeline([
                     ('selector', ItemSelector(key='review')),
-                    ('tfidf', TfidfVectorizer(ngram_range=(1, 3), max_df=0.4, min_df=2, norm='l2', sublinear_tf=True, max_features=750)),
+                    ('tfidf', CountVectorizer(ngram_range=(1, 3))),
+                    #('tfidf', TfidfVectorizer(ngram_range=(1, 3), max_df=0.4, min_df=2, norm='l2', sublinear_tf=True)),
                 ])),
 
             ],
