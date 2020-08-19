@@ -115,7 +115,7 @@ def fit_predict_measure(mode, train_file, test_file, lang = 'ta'):
     print('data loaded')
     target_names = data_train['target_names']
 
-    pipeline = get_pipeline(lang)
+    pipeline = get_pipeline(lang, len(data_train['data']))
     pipeline.fit(data_train['data'], data_train['target_names'])
     """ params = pipeline.get_params(deep=True)
     print(params['rsrch__estimator__alpha'], params['rsrch__estimator__penalty']) """
@@ -139,23 +139,22 @@ def fit_predict_measure(mode, train_file, test_file, lang = 'ta'):
                 outf.write('\t'.join((idx, review, label)) + '\n')
         print(f'predict data written to theedhumnandrum_{lang}.tsv')
 
-def get_pipeline(lang = 'ta'):
-    clf = SGDClassifier()
+def get_pipeline(lang = 'ta', datalen = 1000):
 
     if lang == 'ta':
         chosen_weights={ 
             'emoji_sentiment': 0.6,
-            'emojis': 0.3,
-            'review_bow': 1.0,
-            'review_ngram': 0.5
+            'emojis': 0.8, #higher value seems to improve negative ratings
+            'review_bow': 0.0,
+            'review_ngram': 1.0
         }
 
     if lang == 'ml':
         chosen_weights={ 
             'emoji_sentiment': 0.6,
             'emojis': 0.4,
-            'review_bow': 1.0,
-            'review_ngram': 0.5
+            'review_bow': 0.0,
+            'review_ngram': 1.0
         }
 
     """ distributions = dict(
@@ -174,7 +173,7 @@ def get_pipeline(lang = 'ta'):
                 # Pipeline for standard bag-of-words model for review
                 ('emojis', Pipeline([
                     ('selector', ItemSelector(key='emojis')),
-                    ('tfidf', TfidfVectorizer(token_pattern=r'[^\s]+', stop_words=None, max_df=0.5, min_df=1)),
+                    ('tfidf', TfidfVectorizer(token_pattern=r'[^\s]+', stop_words=None, max_df=0.4, min_df=2, norm='l2', sublinear_tf=True)),
                 ])),
 
                 # Pipeline for pulling features from the post's emoji sentiment
@@ -200,7 +199,7 @@ def get_pipeline(lang = 'ta'):
                 # Pipeline for standard bag-of-words model for review
                 ('review_ngram', Pipeline([
                     ('selector', ItemSelector(key='review')),
-                    ('tfidf', CountVectorizer(ngram_range=(1, 3))),
+                    ('tfidf', TfidfVectorizer(ngram_range=(1, 3), max_df=0.4, min_df=2, norm='l2', sublinear_tf=True, max_features=750)),
                 ])),
 
             ],
@@ -211,7 +210,8 @@ def get_pipeline(lang = 'ta'):
 
         # Use an SVC/SGD classifier on the combined features
         #('svc', SVC(kernel='linear')),
-        ('sgd', SGDClassifier(loss="log", penalty="elasticnet", max_iter=500, random_state=0)),
+        #the value for max_iter is based on suggestion here - https://scikit-learn.org/stable/modules/sgd.html#tips-on-practical-use
+        ('sgd', SGDClassifier(loss="log", penalty="elasticnet", max_iter=np.ceil(10**6/datalen), random_state=3000)),
         # ('rsrch', RandomizedSearchCV(estimator=clf, param_distributions=distributions, cv=5, n_iter=5)),
     ])
     return pipeline
