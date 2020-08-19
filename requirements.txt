@@ -6,3 +6,5 @@ sklearn
 matplotlib
 snowballstemmer
 googletrans
+langdetect
+pickle

@@ -11,6 +11,7 @@ Feature Union with Heterogeneous Data Sources
 from __future__ import print_function
 
 import numpy as np
+import pickle
 
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.decomposition import TruncatedSVD
@@ -130,21 +131,22 @@ class FeatureExtractor(BaseEstimator, TransformerMixin):
             features['lang_tag'][i] = {'lang': lang, 'agreement': agreement}
         return features
 
-def fit_predict_measure(mode, train_file, test_file, lang = 'ta'):
+def fit_predict_measure(mode, train_file, test_file, picklefile, lang = 'ta'):
     print(train_file, test_file)
     data_train = load_docs(train_file, mode='train')
     data_test = load_docs(test_file, mode=mode)
     print('data loaded')
     target_names = data_train['target_names']
 
-    pipeline = get_pipeline(lang, len(data_train['data']))
-    pipeline.fit(data_train['data'], data_train['target_names'])
-    """ params = pipeline.get_params(deep=True)
-    print(params['rsrch__estimator__alpha'], params['rsrch__estimator__penalty']) """
-    y = pipeline.predict(data_test['data'])
-    print(len(y))
-    assert(len(data_test['data'])==len(y))
     if mode == 'test':
+        pipeline = get_pipeline(lang, len(data_train['data']))
+        pipeline.fit(data_train['data'], data_train['target_names'])
+        """ params = pipeline.get_params(deep=True)
+        print(params['rsrch__estimator__alpha'], params['rsrch__estimator__penalty']) """
+        y = pipeline.predict(data_test['data'])
+        print(len(y))
+        assert(len(data_test['data'])==len(y))
+        pickle.dump(pipeline, open(picklefile, 'wb'))
         idx = 0
         for v in data_test['data']:
             if (y[idx] == data_test['target_names'][idx]):
@@ -155,6 +157,13 @@ def fit_predict_measure(mode, train_file, test_file, lang = 'ta'):
 
         print(classification_report(y, data_test['target_names']))
     if mode == 'predict':
+        pipeline = pickle.load(open(picklefile, 'rb'))
+        pipeline.fit(data_train['data'], data_train['target_names'])
+        """ params = pipeline.get_params(deep=True)
+        print(params['rsrch__estimator__alpha'], params['rsrch__estimator__penalty']) """
+        y = pipeline.predict(data_test['data'])
+        print(len(y))
+        assert(len(data_test['data'])==len(y))
         with open(f'theedhumnandrum_{lang}.tsv', 'w') as outf:
             for idx, review, label in zip(data_test['ids'], data_test['data'], y):
                 print(idx)
@@ -249,10 +258,10 @@ def get_pipeline(lang = 'ta', datalen = 1000):
 
 if __name__ == "__main__":
     args = sys.argv
-    if len(args) < 5:
+    if len(args) < 6:
         print('Your command should be:')
-        print('python sentiment_classifier.py <mode> <language code> <training file path> <test file path>')
+        print('python sentiment_classifier.py <mode> <language code> <training file path> <test file path> <picklefilepath>')
         print('mode:predict/test, language: ta/ml')
         sys.exit()
-    mode, lang, train_file, test_file = args[1:5]
-    fit_predict_measure(mode, train_file, test_file, lang = lang)
+    mode, lang, train_file, test_file, picklefile = args[1:6]
+    fit_predict_measure(mode, train_file, test_file, picklefile, lang = lang)
