@@ -27,7 +27,7 @@ from scipy.stats import uniform
 import sys
 # Appeding our src directory to sys path so that we can import modules.
 sys.path.append('../..')
-from src.playground.feature_utils import load_docs, get_emojis_from_text, get_language_tag
+from src.playground.feature_utils import load_docs, get_emojis_from_text
 sys.path.append('../../src/extern/indic_nlp_library/')
 from src.extern.indic_nlp_library.indicnlp.normalize.indic_normalize import BaseNormalizer
 
@@ -81,6 +81,14 @@ class TextStats(BaseEstimator, TransformerMixin):
                  'num_sentences': text.count('.')}
                 for text in reviews]
 
+class Langfeatures(BaseEstimator, TransformerMixin):
+    """Extract features from each lang tag for DictVectorizer"""
+
+    def fit(self, x, y=None):
+        return self
+
+    def transform(self, lang_tag):
+        return [{item[0]:item[1]} for item in lang_tag.items()] 
 
 class FeatureExtractor(BaseEstimator, TransformerMixin):
     """Extract review text, emojis and emoji sentiment.
@@ -91,7 +99,19 @@ class FeatureExtractor(BaseEstimator, TransformerMixin):
     def __init__(self, lang = 'ta'):
         self.lang = lang
         self.normalizer = BaseNormalizer(lang)
+        self.lmap = self.load_language_maps('../../resources/data/alltextslang.txt')
         super().__init__()
+
+    def load_language_maps(self, mapfile):
+        lmap = {}
+        with open(mapfile, 'r') as mapf:
+            for line in mapf:
+                text, lang, conf = line.rstrip().split('\t')
+                lmap[text] = {'lang':lang, 'conf':float(conf)}
+        return lmap
+                    
+    def get_language_tag(self, text):
+        return self.lmap.get(text, {'lang':'unknown', 'conf': 0.0})
 
     def fit(self, x, y=None):
         return self
@@ -106,7 +126,23 @@ class FeatureExtractor(BaseEstimator, TransformerMixin):
             features['emojis'][i] = ' '.join(emojis)
             features['emoji_sentiment'][i] = sentiment
 
-            features['lang_tag'][i] = get_language_tag(review)
+            lang_feature = {}
+            print(lang_feature)
+            lang_feature = self.get_language_tag(review)
+            print(lang_feature)
+            if lang_feature['lang'] == self.lang:
+                # google agrees with some confidence
+                lang_feature['agreement'] = 1
+            elif lang_feature['conf'] < 0.5:
+                # google says not-tamil, but weakly
+                lang_feature['agreement'] = 0.5
+            else:
+                # google clearly says not-tamil
+                lang_feature['agreement'] = 0
+                print('I was here')
+            # leave confidence out after flagging above
+            lang_feature.pop('conf')
+            features['lang_tag'][i] = lang_feature
         return features
 
 def fit_predict_measure(mode, train_file, test_file, lang = 'ta'):
@@ -147,7 +183,8 @@ def get_pipeline(lang = 'ta', datalen = 1000):
             'emoji_sentiment': 0.6,
             'emojis': 0.8, #higher value seems to improve negative ratings
             'review_bow': 1.0,
-            'review_ngram': 1.0
+            'review_ngram': 1.0,
+            'lang_tag': 0.5,
         }
 
     if lang == 'ml':
@@ -155,7 +192,8 @@ def get_pipeline(lang = 'ta', datalen = 1000):
             'emoji_sentiment': 0.6,
             'emojis': 0.4,
             'review_bow': 1.0,
-            'review_ngram': 0.5
+            'review_ngram': 0.5,
+            'lang_tag': 0.5,
         }
 
     """ distributions = dict(
@@ -204,6 +242,13 @@ def get_pipeline(lang = 'ta', datalen = 1000):
                     #('tfidf', TfidfVectorizer(ngram_range=(1, 3), max_df=0.4, min_df=2, norm='l2', sublinear_tf=True)),
                 ])),
 
+                # Pipeline for pulling langtag features
+                ('lang_tag', Pipeline([
+                    ('selector', ItemSelector(key='lang_tag')),
+                    ('stats', Langfeatures()),  # returns a list of dicts
+                    ('vect', DictVectorizer()),  # list of dicts -> feature matrix
+                ])),
+
             ],
 
             # weight components in FeatureUnion
@@ -225,6 +270,5 @@ if __name__ == "__main__":
         print('python sentiment_classifier.py <mode> <language code> <training file path> <test file path>')
         print('mode:predict/test, language: ta/ml')
         sys.exit()
-    
     mode, lang, train_file, test_file = args[1:5]
     fit_predict_measure(mode, train_file, test_file, lang = lang)
