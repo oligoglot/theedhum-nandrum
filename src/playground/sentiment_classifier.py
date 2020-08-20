@@ -170,6 +170,7 @@ def fit_predict_measure(mode, train_file, test_file, inputfile, lang = 'ta'):
         print(len(y))
         assert(len(data_test['data'])==len(y))
         with open(f'theedhumnandrum_{lang}.tsv', 'w') as outf:
+            outf.write('id\ttext\tlabel\n')
             for idx, review, label in zip(data_test['ids'], data_test['data'], y):
                 print(idx)
                 outf.write('\t'.join((idx, review, label)) + '\n')
