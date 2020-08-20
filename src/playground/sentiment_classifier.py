@@ -186,7 +186,7 @@ def perform_hyper_param_tuning(data_train, data_test, input_file, lang = 'ta'):
   # }
   with open(input_file) as f:
      parameters = json.load(f)
-  grid_search = GridSearchCV(pipeline, parameters, n_jobs=-1, verbose=1, scoring='f1_micro')
+  grid_search = GridSearchCV(pipeline, parameters, n_jobs=-1, verbose=1, scoring='accuracy')
   print("Performing grid search...")
   print("pipeline:", [name for name, _ in pipeline.steps])
   print("parameters:")
@@ -223,19 +223,19 @@ def get_pipeline(lang = 'ta', datalen = 1000):
     if lang == 'ta':
         chosen_weights={ 
             'emoji_sentiment': 0.6,
-            'emojis': 0.6, #higher value seems to improve negative ratings
+            'emojis': 0.8, #higher value seems to improve negative ratings
             'review_bow': 0.0,
             'review_ngram': 1.0,
-            'lang_tag': 0.5 ,
+            'lang_tag': 0.3 ,
         }
 
     if lang == 'ml':
         chosen_weights={ 
             'emoji_sentiment': 0.6,
-            'emojis': 0.4,
-            'review_bow': 1.0,
-            'review_ngram': 0.5,
-            'lang_tag': 0.6,
+            'emojis': 0.6, #higher value seems to improve negative ratings
+            'review_bow': 0.0,
+            'review_ngram': 1.0,
+            'lang_tag': 0.5 ,
         }
 
     """ distributions = dict(
@@ -254,7 +254,7 @@ def get_pipeline(lang = 'ta', datalen = 1000):
                 # Pipeline for standard bag-of-words model for review
                 ('emojis', Pipeline([
                     ('selector', ItemSelector(key='emojis')),
-                    ('tfidf', TfidfVectorizer(token_pattern=r'[^\s]+', stop_words=None, max_df=0.4, min_df=2)),
+                    ('tfidf', TfidfVectorizer(token_pattern=r'[^\s]+', stop_words=None, max_df=0.4, min_df=2, max_features=10)),
                 ])),
 
                 # Pipeline for pulling features from the post's emoji sentiment
@@ -266,7 +266,9 @@ def get_pipeline(lang = 'ta', datalen = 1000):
                 # Pipeline for standard bag-of-words model for review
                 ('review_bow', Pipeline([
                     ('selector', ItemSelector(key='review')),
-                    ('tfidf', TfidfVectorizer( input='content', stop_words=None, sublinear_tf=True, max_df=0.5, min_df=1)),
+                    # Best Tamil Configuration
+                    # ('tfidf', TfidfVectorizer( input='content', stop_words=None, sublinear_tf=True, max_df=0.4, min_df=1, max_features=200))
+                    ('tfidf', TfidfVectorizer( input='content', stop_words=None, sublinear_tf=True, max_df=0.4, min_df=1, max_features=200)),
                     ('best', TruncatedSVD(n_components=50)),
                 ])),
 
@@ -280,8 +282,10 @@ def get_pipeline(lang = 'ta', datalen = 1000):
                 # Pipeline for standard bag-of-words model for review
                 ('review_ngram', Pipeline([
                     ('selector', ItemSelector(key='review')),
-                    #('tfidf', CountVectorizer(ngram_range=(1, 3))),
-                    ('tfidf', TfidfVectorizer(ngram_range=(1, 3), max_df=0.4, min_df=2, norm='l2', sublinear_tf=True)),
+                    #tamil - best config 
+                    # ('tfidf', CountVectorizer(ngram_range=(1, 4))),
+                    ('tfidf', CountVectorizer(ngram_range=(1, 4))),
+                    #('tfidf', TfidfVectorizer(ngram_range=(2, 4), max_df=0.4, min_df=2, norm='l2', sublinear_tf=True)),
                 ])),
 
                 # Pipeline for pulling langtag features
@@ -298,8 +302,10 @@ def get_pipeline(lang = 'ta', datalen = 1000):
 
         # Use an SVC/SGD classifier on the combined features
         #('svc', SVC(kernel='linear')),
-        #the value for max_iter is based on suggestion here - https://scikit-learn.org/stable/modules/sgd.html#tips-on-practical-use
-        ('sgd', SGDClassifier(loss="log", penalty="elasticnet", max_iter=np.ceil(10**6/datalen), random_state=0)),
+        #the value for max_iter(np.ceil(10**6/datalen)) is based on suggestion here - https://scikit-learn.org/stable/modules/sgd.html#tips-on-practical-use
+        # This is best configuration for Tamil
+        #('sgd', SGDClassifier(loss="modified_huber", penalty="elasticnet", max_iter=np.ceil(10**6/datalen), random_state=0, alpha = 0.0001)),
+        ('sgd', SGDClassifier(loss="modified_huber", penalty="elasticnet", max_iter=np.ceil(10**6/datalen), random_state=0, alpha = 0.0001)),
         # ('rsrch', RandomizedSearchCV(estimator=clf, param_distributions=distributions, cv=5, n_iter=5)),
     ])
     return pipeline
