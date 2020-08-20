@@ -1,0 +1,5 @@
+{
+  "sgd__loss" : ["hinge", "log", "squared_hinge", "modified_huber"],
+  "sgd__alpha" : [0.0001, 0.001, 0.01, 0.1],
+  "sgd__penalty" : ["l2", "l1", "none"]
+}
