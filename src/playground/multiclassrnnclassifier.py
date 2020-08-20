@@ -30,11 +30,40 @@ MAX_SEQUENCE_LENGTH = 50
 EMBEDDING_DIM = 100
 tokenizer = Tokenizer(num_words=MAX_NB_WORDS, filters='!"#$%&()*+,-./:;<=>?@[\]^_`{|}~', lower=True)
 
+def load_language_maps(mapfile):
+        lmap = {}
+        with open(mapfile, 'r') as mapf:
+            for line in mapf:
+                text, lang, conf = line.rstrip().split('\t')
+                lmap[text] = (lang, float(conf))
+        return lmap
+                    
+def get_language_tag(text):
+    return lmap.get(text, ('unknown', 0.0))
+
+def append_language_tag(text):
+    p_lang, conf = get_language_tag(text)
+    if p_lang == lang or p_lang == (lang + 'en'):
+        # google agrees with some confidence
+        agreement = 1
+    elif conf < 0.5:
+        # google says not-tamil, but weakly
+        agreement = 0.5
+    else:
+        # google clearly says not-tamil
+        agreement = 0
+    return ' '.join((text, p_lang, lang, str(agreement)))
+
+def append_emoji_sentiment(text):
+    emojis, sentiment = get_emojis_from_text(text)
+    return '  '.join((text, str(emojis), sentiment))
+
 def load_data(df, mode, lb = None):
     df.info()
     df = df.reset_index(drop=True)
-        
-    tokenizer.fit_on_texts(df.text.values)
+    df['text'].apply(append_emoji_sentiment)
+    df['text'].apply(append_language_tag)
+    tokenizer.fit_on_texts([normalizer.normalize (text) for text in df.text.values])
     word_index = tokenizer.word_index
     print('Found %s unique tokens.' % len(word_index))
 
@@ -55,6 +84,8 @@ def load_data(df, mode, lb = None):
     return (X, Y, lb)
 
 lang, train_file, test_file, predict_file, outfile = sys.argv[1:6]
+normalizer = BaseNormalizer(lang)
+lmap = load_language_maps('../../resources/data/alltextslang.txt')
 #train_file = '../../resources/data/tamil_train.tsv'
 train_df = pd.read_csv(train_file, sep='\t')
 X_train, Y_train, lb = load_data(train_df, 'train')
@@ -79,11 +110,11 @@ if lang == 'ml':
     model = Sequential()
     model.add(Embedding(MAX_NB_WORDS, EMBEDDING_DIM, input_length=X_train.shape[1]))
     model.add(SpatialDropout1D(0.5))
-    model.add(LSTM(100, dropout=0.3, recurrent_dropout=0.3, return_sequences=True))
+    #model.add(LSTM(100, dropout=0.3, recurrent_dropout=0.3, return_sequences=True))
     model.add(LSTM(100, dropout=0.3, recurrent_dropout=0.3))
     model.add(Dense(5, activation='softmax'))
     model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.0001), metrics=['accuracy'])
-    epochs = 14
+    epochs = 10
     batch_size = 64
 
 history = model.fit(X_train, Y_train, epochs=epochs, batch_size=batch_size,validation_split=0.1,callbacks=[EarlyStopping(monitor='val_loss', patience=3, min_delta=0.0001)])
