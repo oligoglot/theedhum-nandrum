@@ -8,3 +8,5 @@ snowballstemmer
 googletrans
 langdetect
 pickle
+pandas
+keras
