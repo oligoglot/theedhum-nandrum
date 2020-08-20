@@ -3,6 +3,8 @@ import re
 import sys
 from googletrans import Translator
 from langdetect import detect
+import math
+from bisect import bisect_left
 # Appeding our src directory to sys path so that we can import modules.
 sys.path.append('../..')
 from  src.tn.lib.sentimoji import get_emoji_sentiment_rank
@@ -78,6 +80,18 @@ def get_emojis_from_text(text):
         label = 'Neutral'
     return ((emojis, label))
 
+
+def get_doc_len_range(document_words):
+    return (get_range(len(document_words)))
+
+
+def get_range(doclen):
+    ranges = ["1-10", "11-20", "21-30", "31-40", "41-50", "51-60", "61-70", "71-80", "81-90", "91-100", "101-110", "111-120", "121-130", "131-140",
+              "141-150", "151-160", "161-170", "171-180", "181-190", "191-200", ">200"]
+    breakpoints = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100,
+                   110, 120, 130, 140, 150, 160, 170, 180, 190, math.inf]
+    index = bisect_left(breakpoints, doclen)
+    return ranges[index]
 def get_language(text):
       #translator = Translator()
       try:

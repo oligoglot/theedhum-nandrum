@@ -32,7 +32,7 @@ from sklearn.model_selection import GridSearchCV
 import sys
 # Appeding our src directory to sys path so that we can import modules.
 sys.path.append('../..')
-from src.playground.feature_utils import load_docs, get_emojis_from_text
+from src.playground.feature_utils import load_docs, get_emojis_from_text, get_doc_len_range
 sys.path.append('../../src/extern/indic_nlp_library/')
 from src.extern.indic_nlp_library.indicnlp.normalize.indic_normalize import BaseNormalizer
 
@@ -114,7 +114,7 @@ class FeatureExtractor(BaseEstimator, TransformerMixin):
 
     def transform(self, reviews):
         features = np.recarray(shape=(len(reviews),), dtype=[('review', object), ('emojis', object),
-                                                            ('emoji_sentiment', object), ('lang_tag', object)],)
+                                                            ('emoji_sentiment', object), ('lang_tag', object), ('len_range', object)],)
         for i, review in enumerate(reviews):       
             features['review'][i] = self.normalizer.normalize(text = review)
 
@@ -133,6 +133,7 @@ class FeatureExtractor(BaseEstimator, TransformerMixin):
                 # google clearly says not-tamil
                 agreement = 0
             features['lang_tag'][i] = {'lang': lang, 'agreement': agreement}
+            features['len_range'][i] = get_doc_len_range(review)
         return features
 
 def fit_predict_measure(mode, train_file, test_file, inputfile, lang = 'ta'):
@@ -227,7 +228,8 @@ def get_pipeline(lang = 'ta', datalen = 1000):
             'emojis': 0.8, #higher value seems to improve negative ratings
             'review_bow': 0.0,
             'review_ngram': 1.0,
-            'lang_tag': 0.6 ,
+            'lang_tag': 0.6,
+            'len_range': 0.0
         }
 
     if lang == 'ml':
@@ -237,6 +239,7 @@ def get_pipeline(lang = 'ta', datalen = 1000):
             'review_bow': 0.0,
             'review_ngram': 1.0,
             'lang_tag': 0.7 ,
+            'len_range': 0.5
         }
 
     """ distributions = dict(
@@ -261,6 +264,12 @@ def get_pipeline(lang = 'ta', datalen = 1000):
                 # Pipeline for pulling features from the post's emoji sentiment
                 ('emoji_sentiment', Pipeline([
                     ('selector', ItemSelector(key='emoji_sentiment')),
+                    ('vect', HashingVectorizer()),
+                ])),
+
+                # Pipeline for length of doc feature
+                ('len_range', Pipeline([
+                    ('selector', ItemSelector(key='len_range')),
                     ('vect', HashingVectorizer()),
                 ])),
 
