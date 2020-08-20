@@ -151,7 +151,7 @@ def fit_predict_measure(mode, train_file, test_file, inputfile, lang = 'ta'):
         y = pipeline.predict(data_test['data'])
         print(len(y))
         assert(len(data_test['data'])==len(y))
-        #pickle.dump(pipeline, open(inputfile, 'wb'))
+        pickle.dump(pipeline, open(inputfile, 'wb'))
         idx = 0
         for v in data_test['data']:
             if (y[idx] == data_test['target_names'][idx]):
