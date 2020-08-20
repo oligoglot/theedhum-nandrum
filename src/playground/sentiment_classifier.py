@@ -12,6 +12,9 @@ from __future__ import print_function
 
 import numpy as np
 import pickle
+import json
+from pprint import pprint
+from time import time
 
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.decomposition import TruncatedSVD
@@ -24,6 +27,7 @@ from sklearn.svm import SVC
 from sklearn.linear_model import SGDClassifier
 from sklearn.model_selection import RandomizedSearchCV
 from scipy.stats import uniform
+from sklearn.model_selection import GridSearchCV
 
 import sys
 # Appeding our src directory to sys path so that we can import modules.
@@ -131,13 +135,14 @@ class FeatureExtractor(BaseEstimator, TransformerMixin):
             features['lang_tag'][i] = {'lang': lang, 'agreement': agreement}
         return features
 
-def fit_predict_measure(mode, train_file, test_file, picklefile, lang = 'ta'):
+def fit_predict_measure(mode, train_file, test_file, inputfile, lang = 'ta'):
     print(train_file, test_file)
     data_train = load_docs(train_file, mode='train')
     data_test = load_docs(test_file, mode=mode)
     print('data loaded')
     target_names = data_train['target_names']
-
+    if mode == 'experiment':
+      perform_hyper_param_tuning(data_train, data_test, inputfile, lang)
     if mode == 'test':
         pipeline = get_pipeline(lang, len(data_train['data']))
         pipeline.fit(data_train['data'], data_train['target_names'])
@@ -146,7 +151,7 @@ def fit_predict_measure(mode, train_file, test_file, picklefile, lang = 'ta'):
         y = pipeline.predict(data_test['data'])
         print(len(y))
         assert(len(data_test['data'])==len(y))
-        pickle.dump(pipeline, open(picklefile, 'wb'))
+        pickle.dump(pipeline, open(inputfile, 'wb'))
         idx = 0
         for v in data_test['data']:
             if (y[idx] == data_test['target_names'][idx]):
@@ -157,7 +162,7 @@ def fit_predict_measure(mode, train_file, test_file, picklefile, lang = 'ta'):
 
         print(classification_report(y, data_test['target_names']))
     if mode == 'predict':
-        pipeline = pickle.load(open(picklefile, 'rb'))
+        pipeline = pickle.load(open(inputfile, 'rb'))
         pipeline.fit(data_train['data'], data_train['target_names'])
         """ params = pipeline.get_params(deep=True)
         print(params['rsrch__estimator__alpha'], params['rsrch__estimator__penalty']) """
@@ -170,15 +175,58 @@ def fit_predict_measure(mode, train_file, test_file, picklefile, lang = 'ta'):
                 outf.write('\t'.join((idx, review, label)) + '\n')
         print(f'predict data written to theedhumnandrum_{lang}.tsv')
 
+# Perform tuning of hyper parameters by passing in the field you want to
+# tune as a json
+def perform_hyper_param_tuning(data_train, data_test, input_file, lang = 'ta'):
+  pipeline = get_pipeline(lang, len(data_train['data']))
+  # parameters = {
+  #   'sgd__loss' : ["hinge", "log", "squared_hinge", "modified_huber"],
+  #   'sgd__alpha' : [0.0001, 0.001, 0.01, 0.1],
+  #   'sgd__penalty' : ["l2", "l1", "none"],
+  # }
+  with open(input_file) as f:
+     parameters = json.load(f)
+  grid_search = GridSearchCV(pipeline, parameters, n_jobs=-1, verbose=1, scoring='f1_micro')
+  print("Performing grid search...")
+  print("pipeline:", [name for name, _ in pipeline.steps])
+  print("parameters:")
+  pprint(parameters)
+  t0 = time()
+  grid_search.fit(data_train['data'], data_train['target_names'])
+  print("done in %0.3fs" % (time() - t0))
+  print()
+
+  print("Best score: %0.3f" % grid_search.best_score_)
+  print("Best parameters set:")
+  best_parameters = grid_search.best_estimator_.get_params()
+  for param_name in sorted(parameters.keys()):
+      print("\t%s: %r" % (param_name, best_parameters[param_name]))
+  print("Grid scores on development set:")
+  print()
+  means = grid_search.cv_results_['mean_test_score']
+  stds = grid_search.cv_results_['std_test_score']
+  for mean, std, params in zip(means, stds, grid_search.cv_results_['params']):
+      print("%0.3f (+/-%0.03f) for %r"
+            % (mean, std * 2, params))
+  print()
+  print("Detailed classification report:")
+  print()
+  print("The model is trained on the full development set.")
+  print("The scores are computed on the full evaluation set.")
+  print()
+  y_true, y_pred = data_test["target_names"], grid_search.predict(data_test["data"])
+  print(classification_report(y_true, y_pred))
+  print()
+
 def get_pipeline(lang = 'ta', datalen = 1000):
 
     if lang == 'ta':
         chosen_weights={ 
             'emoji_sentiment': 0.6,
-            'emojis': 0.8, #higher value seems to improve negative ratings
-            'review_bow': 1.0,
+            'emojis': 0.6, #higher value seems to improve negative ratings
+            'review_bow': 0.0,
             'review_ngram': 1.0,
-            'lang_tag': 0.6,
+            'lang_tag': 0.5 ,
         }
 
     if lang == 'ml':
@@ -232,8 +280,8 @@ def get_pipeline(lang = 'ta', datalen = 1000):
                 # Pipeline for standard bag-of-words model for review
                 ('review_ngram', Pipeline([
                     ('selector', ItemSelector(key='review')),
-                    ('tfidf', CountVectorizer(ngram_range=(1, 3))),
-                    #('tfidf', TfidfVectorizer(ngram_range=(1, 3), max_df=0.4, min_df=2, norm='l2', sublinear_tf=True)),
+                    #('tfidf', CountVectorizer(ngram_range=(1, 3))),
+                    ('tfidf', TfidfVectorizer(ngram_range=(1, 3), max_df=0.4, min_df=2, norm='l2', sublinear_tf=True)),
                 ])),
 
                 # Pipeline for pulling langtag features
@@ -260,8 +308,9 @@ if __name__ == "__main__":
     args = sys.argv
     if len(args) < 6:
         print('Your command should be:')
-        print('python sentiment_classifier.py <mode> <language code> <training file path> <test file path> <picklefilepath>')
-        print('mode:predict/test, language: ta/ml')
+        print('python sentiment_classifier.py <mode> <language code> <training file path> <test file path> <inputfilepath>')
+        print('mode:predict/test/experiment, language: ta/ml')
+        print('Input file path is the pickle file path for train and predict, and json file path for experiment')
         sys.exit()
-    mode, lang, train_file, test_file, picklefile = args[1:6]
-    fit_predict_measure(mode, train_file, test_file, picklefile, lang = lang)
+    mode, lang, train_file, test_file, inputfile = args[1:6]
+    fit_predict_measure(mode, train_file, test_file, inputfile, lang = lang)
