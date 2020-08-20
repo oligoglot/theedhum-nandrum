@@ -30,12 +30,10 @@ MAX_SEQUENCE_LENGTH = 50
 EMBEDDING_DIM = 100
 tokenizer = Tokenizer(num_words=MAX_NB_WORDS, filters='!"#$%&()*+,-./:;<=>?@[\]^_`{|}~', lower=True)
 
-def load_data(infile, mode, lb = None):
-    df = pd.read_csv(infile, sep='\t')
+def load_data(df, mode, lb = None):
     df.info()
-    print(df.category.value_counts())
     df = df.reset_index(drop=True)
-    
+        
     tokenizer.fit_on_texts(df.text.values)
     word_index = tokenizer.word_index
     print('Found %s unique tokens.' % len(word_index))
@@ -43,42 +41,39 @@ def load_data(infile, mode, lb = None):
     X = tokenizer.texts_to_sequences(df.text.values)
     X = pad_sequences(X, maxlen=MAX_SEQUENCE_LENGTH)
     print('Shape of data tensor:', X.shape)
-    if lb is None:
-        lb = LabelBinarizer()
-        Y = lb.fit_transform(df.category.values.reshape(-1, 1))
+    if mode == 'pred':
+        Y = df.id.values
     else:
-        Y = lb.transform(df.category.values.reshape(-1, 1))
-    print('Shape of label tensor:', Y.shape)
+        print(df.category.value_counts())
+        
+        if lb is None:
+            lb = LabelBinarizer()
+            Y = lb.fit_transform(df.category.values.reshape(-1, 1))
+        else:
+            Y = lb.transform(df.category.values.reshape(-1, 1))
+        print('Shape of label tensor:', Y.shape)
     return (X, Y, lb)
 
-train_file = '../../resources/data/tamil_train.tsv'
-X_train, Y_train, lb = load_data(train_file, 'train')
+train_file, predict_file, outfile = sys.argv[1:4]
+#train_file = '../../resources/data/tamil_train.tsv'
+train_df = pd.read_csv(train_file, sep='\t')
+X_train, Y_train, lb = load_data(train_df, 'train')
 test_file = '../../resources/data/tamil_dev.tsv'
-X_test, Y_test, lb = load_data(test_file, 'test', lb)
-""" labelmap = {}
-for category, y in zip(df.category.values, Y):
-    # hack to reverse engineer the mapping
-    labelmap[np.where(y==1)[0][0]] = category
-    print(category, y)
-    if len(labelmap.keys()) == Y.shape[1]:
-        break
-print(labelmap) """
+test_df = pd.read_csv(test_file, sep='\t')
+X_test, Y_test, lb = load_data(test_df, 'test', lb)
 
 # X_train, X_test, Y_train, Y_test = train_test_split(X,Y, test_size = 0.10, random_state = 42)
 print(X_train.shape,Y_train.shape)
 print(X_test.shape,Y_test.shape)
 
-""" import sys
-sys.exit() """
-
 model = Sequential()
 model.add(Embedding(MAX_NB_WORDS, EMBEDDING_DIM, input_length=X_train.shape[1]))
-model.add(SpatialDropout1D(0.7))
-model.add(LSTM(150, dropout=0.5, recurrent_dropout=0.4))
+model.add(SpatialDropout1D(0.8))
+model.add(LSTM(100, dropout=0.7, recurrent_dropout=0.5))
 model.add(Dense(5, activation='softmax'))
 model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.0001), metrics=['accuracy'])
 
-epochs = 8
+epochs = 12
 batch_size = 64
 
 history = model.fit(X_train, Y_train, epochs=epochs, batch_size=batch_size,validation_split=0.1,callbacks=[EarlyStopping(monitor='val_loss', patience=3, min_delta=0.0001)])
@@ -90,5 +85,13 @@ new_review = ['Thalaiva superstar Rajinikanth number one mass Hero']
 seq = tokenizer.texts_to_sequences(new_review)
 padded = pad_sequences(seq, maxlen=MAX_SEQUENCE_LENGTH)
 pred = model.predict(padded)
-#labelid = 
 print(pred, lb.inverse_transform(pred))
+
+with open(outfile, 'w') as outf:
+    test_df = pd.read_csv(predict_file, sep='\t')
+    X_pred, ID_pred, lb = load_data(test_df, 'pred', lb)
+    Y_pred = lb.inverse_transform(model.predict(X_pred)).flatten()
+    outf.write('id\ttext\tlabel\n')
+    for idx, text, pred_category in zip(ID_pred, test_df.text.values, Y_pred):
+        print(idx, text, pred_category)
+        outf.write('\t'.join((idx, text, pred_category)) + '\n')
