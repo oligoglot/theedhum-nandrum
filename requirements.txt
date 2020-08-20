@@ -7,6 +7,6 @@ matplotlib
 snowballstemmer
 googletrans
 langdetect
-pickle
+tensorflow
 pandas
 keras
