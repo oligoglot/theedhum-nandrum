@@ -226,16 +226,16 @@ def get_pipeline(lang = 'ta', datalen = 1000):
             'emojis': 0.8, #higher value seems to improve negative ratings
             'review_bow': 0.0,
             'review_ngram': 1.0,
-            'lang_tag': 0.3 ,
+            'lang_tag': 0.6 ,
         }
 
     if lang == 'ml':
         chosen_weights={ 
             'emoji_sentiment': 0.6,
-            'emojis': 0.6, #higher value seems to improve negative ratings
+            'emojis': 0.8, #higher value seems to improve negative ratings
             'review_bow': 0.0,
             'review_ngram': 1.0,
-            'lang_tag': 0.5 ,
+            'lang_tag': 0.7 ,
         }
 
     """ distributions = dict(
