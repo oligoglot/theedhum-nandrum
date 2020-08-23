@@ -25,7 +25,7 @@ from src.extern.indic_nlp_library.indicnlp.normalize.indic_normalize import Base
 # The maximum number of words to be used. (most frequent)
 MAX_NB_WORDS = 50000
 # Max number of words in each complaint.
-MAX_SEQUENCE_LENGTH = 50
+MAX_SEQUENCE_LENGTH = 80
 # This is fixed.
 EMBEDDING_DIM = 100
 tokenizer = Tokenizer(num_words=MAX_NB_WORDS, filters='!"#$%&()*+,-./:;<=>?@[\]^_`{|}~', lower=True)
