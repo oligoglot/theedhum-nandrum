@@ -29,6 +29,8 @@ from sklearn.model_selection import RandomizedSearchCV
 from scipy.stats import uniform
 from sklearn.model_selection import GridSearchCV
 
+from libindic.soundex import Soundex
+
 import sys
 # Appeding our src directory to sys path so that we can import modules.
 sys.path.append('../..')
@@ -96,6 +98,7 @@ class FeatureExtractor(BaseEstimator, TransformerMixin):
         self.lang = lang
         self.normalizer = BaseNormalizer(lang)
         self.lmap = self.load_language_maps('../../resources/data/alltextslang.txt')
+        self.soundexer = Soundex()
         super().__init__()
 
     def load_language_maps(self, mapfile):
@@ -113,8 +116,9 @@ class FeatureExtractor(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, reviews):
-        features = np.recarray(shape=(len(reviews),), dtype=[('review', object), ('emojis', object),
-                                                            ('emoji_sentiment', object), ('lang_tag', object), ('len_range', object)],)
+        features = np.recarray(shape=(len(reviews),), 
+                                dtype=[('review', object), ('emojis', object), ('emoji_sentiment', object), 
+                                        ('lang_tag', object), ('len_range', object), ('soundexes', object),],)
         for i, review in enumerate(reviews):       
             features['review'][i] = self.normalizer.normalize(text = review)
 
@@ -134,6 +138,7 @@ class FeatureExtractor(BaseEstimator, TransformerMixin):
                 agreement = 0
             features['lang_tag'][i] = {'lang': lang, 'agreement': agreement}
             features['len_range'][i] = get_doc_len_range(review)
+            features['soundexes'][i] = ' '.join([self.soundexer.soundex(word) for word in review.split()])
         return features
 
 def fit_predict_measure(mode, train_file, test_file, inputfile, lang = 'ta'):
@@ -229,7 +234,8 @@ def get_pipeline(lang = 'ta', datalen = 1000):
             'review_bow': 0.0,
             'review_ngram': 1.0,
             'lang_tag': 0.6,
-            'len_range': 0.0
+            'len_range': 0.0,
+            'soundexes_bow': 0.5,
         }
 
     if lang == 'ml':
@@ -238,8 +244,9 @@ def get_pipeline(lang = 'ta', datalen = 1000):
             'emojis': 0.8, #higher value seems to improve negative ratings
             'review_bow': 0.0,
             'review_ngram': 1.0,
-            'lang_tag': 0.7 ,
-            'len_range': 0.5
+            'lang_tag': 0.7,
+            'len_range': 0.5,
+            'soundexes_bow': 0.5,
         }
 
     """ distributions = dict(
@@ -271,6 +278,15 @@ def get_pipeline(lang = 'ta', datalen = 1000):
                 ('len_range', Pipeline([
                     ('selector', ItemSelector(key='len_range')),
                     ('vect', HashingVectorizer()),
+                ])),
+
+                # Pipeline for standard bag-of-words model for soundexes
+                ('soundexes_bow', Pipeline([
+                    ('selector', ItemSelector(key='soundexes')),
+                    # Best Tamil Configuration
+                    # ('tfidf', TfidfVectorizer( input='content', stop_words=None, sublinear_tf=True, max_df=0.4, min_df=1, max_features=200))
+                    ('tfidf', TfidfVectorizer(token_pattern=r'[^\s]+', input='content', stop_words=None, sublinear_tf=True, max_df=0.4, min_df=1, max_features=200)),
+                    ('best', TruncatedSVD(n_components=50)),
                 ])),
 
                 # Pipeline for standard bag-of-words model for review

@@ -15,6 +15,8 @@ from keras.optimizers import Adam
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
 
+from libindic.soundex import Soundex
+
 import sys
 # Appeding our src directory to sys path so that we can import modules.
 sys.path.append('../..')
@@ -25,11 +27,11 @@ from src.extern.indic_nlp_library.indicnlp.normalize.indic_normalize import Base
 # The maximum number of words to be used. (most frequent)
 MAX_NB_WORDS = 50000
 # Max number of words in each complaint.
-MAX_SEQUENCE_LENGTH = 80
+MAX_SEQUENCE_LENGTH = 150
 # This is fixed.
 EMBEDDING_DIM = 100
 tokenizer = Tokenizer(num_words=MAX_NB_WORDS, filters='!"#$%&()*+,-./:;<=>?@[\]^_`{|}~', lower=True)
-
+soundexer = Soundex()
 def load_language_maps(mapfile):
         lmap = {}
         with open(mapfile, 'r') as mapf:
@@ -52,17 +54,23 @@ def append_language_tag(text):
     else:
         # google clearly says not-tamil
         agreement = 0
-    return ' '.join((text, p_lang, lang, str(agreement)))
+    return ' '.join((' ', text, p_lang, lang, str(agreement), ' '))
 
 def append_emoji_sentiment(text):
     emojis, sentiment = get_emojis_from_text(text)
-    return '  '.join((text, str(emojis), sentiment))
+    return ' '.join((' ', text, str(emojis), sentiment, ' '))
+
+def append_soundex(text):
+    soundexes = [soundexer.soundex(word) for word in text.split()]
+    return ' ' + ' '.join(soundexes) + ' '
+        
 
 def load_data(df, mode, lb = None):
     df.info()
     df = df.reset_index(drop=True)
     df['text'].apply(append_emoji_sentiment)
     df['text'].apply(append_language_tag)
+    df['text'].apply(append_soundex)
     tokenizer.fit_on_texts([normalizer.normalize (text) for text in df.text.values])
     word_index = tokenizer.word_index
     print('Found %s unique tokens.' % len(word_index))
@@ -104,7 +112,7 @@ if lang == 'ta':
     model.add(LSTM(100, dropout=0.7, recurrent_dropout=0.5))
     model.add(Dense(5, activation='softmax'))
     model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.0001), metrics=['accuracy'])
-    epochs = 12
+    epochs = 15
     batch_size = 64
 if lang == 'ml':
     model = Sequential()

@@ -10,3 +10,8 @@ langdetect
 tensorflow
 pandas
 keras
+libindic-soundex
+cython
+SciPy
+libindic-utils
+indictrans

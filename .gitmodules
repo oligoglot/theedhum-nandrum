@@ -1,3 +1,9 @@
 [submodule "src/extern/indic_nlp_library"]
 	path = src/extern/indic_nlp_library
 	url = https://github.com/anoopkunchukuttan/indic_nlp_library.git
+[submodule "src/extern/solthiruthi-sothanaikal"]
+	path = src/extern/solthiruthi-sothanaikal
+	url = https://github.com/indicnlp/solthiruthi-sothanaikal.git
+[submodule "src/extern/deepchar"]
+	path = src/extern/deepchar
+	url = https://github.com/deepchar/deepchar.git
