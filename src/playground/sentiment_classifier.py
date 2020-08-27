@@ -37,6 +37,10 @@ sys.path.append('../..')
 from src.playground.feature_utils import load_docs, get_emojis_from_text, get_doc_len_range
 sys.path.append('../../src/extern/indic_nlp_library/')
 from src.extern.indic_nlp_library.indicnlp.normalize.indic_normalize import BaseNormalizer
+try:
+    from indictrans import Transliterator
+except ImportError:
+    print('Please install indic-trans from git: https://github.com/libindic/indic-trans')
 
 class ItemSelector(BaseEstimator, TransformerMixin):
     """For data grouped by feature, select subset of data at a provided key.
@@ -99,6 +103,8 @@ class FeatureExtractor(BaseEstimator, TransformerMixin):
         self.normalizer = BaseNormalizer(lang)
         self.lmap = self.load_language_maps('../../resources/data/alltextslang.txt')
         self.soundexer = Soundex()
+        self.ta_trans = Transliterator(source='eng', target='tam', build_lookup=True)
+        self.ml_trans = Transliterator(source='eng', target='mal', build_lookup=True)
         super().__init__()
 
     def load_language_maps(self, mapfile):
@@ -138,7 +144,15 @@ class FeatureExtractor(BaseEstimator, TransformerMixin):
                 agreement = 0
             features['lang_tag'][i] = {'lang': lang, 'agreement': agreement}
             features['len_range'][i] = get_doc_len_range(review)
-            features['soundexes'][i] = ' '.join([self.soundexer.soundex(word) for word in review.split()])
+            if self.lang == 'ta':
+                review_trans = self.ta_trans.transform(review)
+            elif self.lang == 'ml':
+                review_trans = self.ml_trans.transform(review)
+            else:
+                review_trans = review
+            # TODO: introduce spell correct here for added normalisation
+            # print(lang, review_trans)
+            features['soundexes'][i] = ' '.join([self.soundexer.soundex(word) for word in review_trans.split()])
         return features
 
 def fit_predict_measure(mode, train_file, test_file, inputfile, lang = 'ta'):
@@ -157,7 +171,8 @@ def fit_predict_measure(mode, train_file, test_file, inputfile, lang = 'ta'):
         y = pipeline.predict(data_test['data'])
         print(len(y))
         assert(len(data_test['data'])==len(y))
-        pickle.dump(pipeline, open(inputfile, 'wb'))
+        # TODO: TypeError: can't pickle module objects.
+        # pickle.dump(pipeline, open(inputfile, 'wb'))
         idx = 0
         for v in data_test['data']:
             if (y[idx] == data_test['target_names'][idx]):

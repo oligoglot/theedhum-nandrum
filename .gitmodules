@@ -7,3 +7,6 @@
 [submodule "src/extern/deepchar"]
 	path = src/extern/deepchar
 	url = https://github.com/deepchar/deepchar.git
+[submodule "src/extern/indic-trans"]
+	path = src/extern/indic-trans
+	url = https://github.com/libindic/indic-trans.git

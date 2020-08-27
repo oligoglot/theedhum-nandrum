@@ -20,10 +20,16 @@ from libindic.soundex import Soundex
 import sys
 # Appeding our src directory to sys path so that we can import modules.
 sys.path.append('../..')
-from src.playground.feature_utils import get_emojis_from_text
+from src.playground.feature_utils import get_emojis_from_text, get_doc_len_range
 sys.path.append('../../src/extern/indic_nlp_library/')
 from src.extern.indic_nlp_library.indicnlp.normalize.indic_normalize import BaseNormalizer
+try:
+    from indictrans import Transliterator
+except ImportError:
+    print('Please install indic-trans from git: https://github.com/libindic/indic-trans')
 
+ta_trans = Transliterator(source='eng', target='tam', build_lookup=True)
+ml_trans = Transliterator(source='eng', target='mal', build_lookup=True)
 # The maximum number of words to be used. (most frequent)
 MAX_NB_WORDS = 50000
 # Max number of words in each complaint.
@@ -61,16 +67,23 @@ def append_emoji_sentiment(text):
     return ' '.join((' ', text, str(emojis), sentiment, ' '))
 
 def append_soundex(text):
+    if lang == 'ta':
+        text = ta_trans.transform(text)
+    if lang == 'ml':
+        text = ml_trans.transform(text)
     soundexes = [soundexer.soundex(word) for word in text.split()]
     return ' ' + ' '.join(soundexes) + ' '
         
+def append_doc_len_range(text):
+    return ' ' + get_doc_len_range(text) + ' '
 
 def load_data(df, mode, lb = None):
     df.info()
     df = df.reset_index(drop=True)
-    df['text'].apply(append_emoji_sentiment)
-    df['text'].apply(append_language_tag)
-    df['text'].apply(append_soundex)
+    df['text'] = df['text'].apply(append_emoji_sentiment)
+    df['text'] = df['text'].apply(append_language_tag)
+    df['text'] = df['text'].apply(append_soundex)
+    df['text'] = df['text'].apply(append_doc_len_range)
     tokenizer.fit_on_texts([normalizer.normalize (text) for text in df.text.values])
     word_index = tokenizer.word_index
     print('Found %s unique tokens.' % len(word_index))
@@ -112,7 +125,7 @@ if lang == 'ta':
     model.add(LSTM(100, dropout=0.7, recurrent_dropout=0.5))
     model.add(Dense(5, activation='softmax'))
     model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.0001), metrics=['accuracy'])
-    epochs = 15
+    epochs = 12
     batch_size = 64
 if lang == 'ml':
     model = Sequential()
