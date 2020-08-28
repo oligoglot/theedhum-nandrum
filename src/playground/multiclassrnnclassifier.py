@@ -72,7 +72,7 @@ def append_soundex(text):
     if lang == 'ml':
         text = ml_trans.transform(text)
     soundexes = [soundexer.soundex(word) for word in text.split()]
-    return ' ' + ' '.join(soundexes) + ' '
+    return ' ' + text + ' ' + ' '.join(soundexes) + ' '
         
 def append_doc_len_range(text):
     return ' ' + get_doc_len_range(text) + ' '
@@ -125,7 +125,7 @@ if lang == 'ta':
     model.add(LSTM(100, dropout=0.7, recurrent_dropout=0.5))
     model.add(Dense(5, activation='softmax'))
     model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.0001), metrics=['accuracy'])
-    epochs = 12
+    epochs = 15
     batch_size = 64
 if lang == 'ml':
     model = Sequential()
