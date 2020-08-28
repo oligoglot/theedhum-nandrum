@@ -37,6 +37,12 @@ sys.path.append('../..')
 from src.playground.feature_utils import load_docs, get_emojis_from_text, get_doc_len_range
 sys.path.append('../../src/extern/indic_nlp_library/')
 from src.extern.indic_nlp_library.indicnlp.normalize.indic_normalize import BaseNormalizer
+
+sys.path.append('../../src/extern/')
+import deepchar
+sys.path.append('../../src/extern/solthiruthi-sothanaikal/')
+from symspellpy import SymSpell, Verbosity
+
 try:
     from indictrans import Transliterator
 except ImportError:
@@ -105,6 +111,11 @@ class FeatureExtractor(BaseEstimator, TransformerMixin):
         self.soundexer = Soundex()
         self.ta_trans = Transliterator(source='eng', target='tam', build_lookup=True)
         self.ml_trans = Transliterator(source='eng', target='mal', build_lookup=True)
+        self.sym_spell = SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
+        self.sym_spell.load_dictionary('../../src/extern/data/etymdict.csv.vocab.tsv.gz',
+                                term_index=0,
+                                count_index=1,
+                                separator="\t")
         super().__init__()
 
     def load_language_maps(self, mapfile):
@@ -146,6 +157,11 @@ class FeatureExtractor(BaseEstimator, TransformerMixin):
             features['len_range'][i] = get_doc_len_range(review)
             if self.lang == 'ta':
                 review_trans = self.ta_trans.transform(review)
+                for word in review_trans.split():
+                    suggestions = self.sym_spell.lookup(word, Verbosity.CLOSEST, max_edit_distance=2, include_unknown=True)
+                    if len(suggestions) > 0 and suggestions[0].distance < 3:
+                        print(word, suggestions[0].term)
+                        # no match with dictionary, we need a more comprehensive dictionary plus phonetic similarity
             elif self.lang == 'ml':
                 review_trans = self.ml_trans.transform(review)
             else:
