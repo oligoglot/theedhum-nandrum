@@ -1,13 +1,10 @@
 """
+@author sanjeethr, oligoglot
 Borrows from https://scikit-learn.org/0.18/auto_examples/hetero_feature_union.html
-=============================================
-Feature Union with Heterogeneous Data Sources
-=============================================
-"""
 
-# Author: Matt Terry <matt.terry@gmail.com>
-#
-# License: BSD 3 clause
+Implements SGDClassifier using FeatureUnions for Sentiment Classification of text
+It also has code to experiment with hyper tuning parameters of the classifier
+"""
 from __future__ import print_function
 
 import numpy as np
@@ -15,6 +12,7 @@ import pickle
 import json
 from pprint import pprint
 from time import time
+import sys, os
 
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.decomposition import TruncatedSVD
@@ -28,19 +26,17 @@ from sklearn.linear_model import SGDClassifier
 from sklearn.model_selection import RandomizedSearchCV
 from scipy.stats import uniform
 from sklearn.model_selection import GridSearchCV
-
 from libindic.soundex import Soundex
 
-import sys
-# Appeding our src directory to sys path so that we can import modules.
-sys.path.append('../..')
-from src.playground.feature_utils import load_docs, get_emojis_from_text, get_doc_len_range
-sys.path.append('../../src/extern/indic_nlp_library/')
-from src.extern.indic_nlp_library.indicnlp.normalize.indic_normalize import BaseNormalizer
 
-sys.path.append('../../src/extern/')
+# Appeding our src directory to sys path so that we can import modules.
+from lib.feature_utils import load_docs, get_emojis_from_text, get_doc_len_range
+# sys.path.append('../extern/indic_nlp_library/')
+sys.path.append(os.path.join(os.path.dirname(sys.path[0]),'extern', 'indic_nlp_library'))
+from indicnlp.normalize.indic_normalize import BaseNormalizer
+sys.path.append(os.path.join(os.path.dirname(sys.path[0]),'extern'))
 import deepchar
-sys.path.append('../../src/extern/solthiruthi-sothanaikal/')
+sys.path.append(os.path.join(os.path.dirname(sys.path[0]),'extern', 'solthiruthi-sothanaikal'))
 from symspellpy import SymSpell, Verbosity
 
 try:
@@ -107,7 +103,7 @@ class FeatureExtractor(BaseEstimator, TransformerMixin):
     def __init__(self, lang = 'ta'):
         self.lang = lang
         self.normalizer = BaseNormalizer(lang)
-        self.lmap = self.load_language_maps('../../resources/data/alltextslang.txt')
+        self.lmap = self.load_language_maps( os.path.join(os.path.dirname(sys.path[0]),'../resources/data/alltextslang.txt'))
         self.soundexer = Soundex()
         self.ta_trans = Transliterator(source='eng', target='tam', build_lookup=True)
         self.ml_trans = Transliterator(source='eng', target='mal', build_lookup=True)
@@ -175,7 +171,7 @@ def fit_predict_measure(mode, train_file, test_file, inputfile, lang = 'ta'):
     print(train_file, test_file)
     data_train = load_docs(train_file, mode='train')
     data_test = load_docs(test_file, mode=mode)
-    print('data loaded')
+    print('Data Loaded')
     target_names = data_train['target_names']
     if mode == 'experiment':
       perform_hyper_param_tuning(data_train, data_test, inputfile, lang)
@@ -256,29 +252,33 @@ def perform_hyper_param_tuning(data_train, data_test, input_file, lang = 'ta'):
   print(classification_report(y_true, y_pred))
   print()
 
+def get_transformer_weights(lang = 'ta'):
+    lang_weights = {
+      'ta' : { 
+              'emoji_sentiment': 0.6,
+              'emojis': 0.8, #higher value seems to improve negative ratings
+              'review_bow': 0.0,
+              'review_ngram': 1.0,
+              'lang_tag': 0.6,
+              'len_range': 0.0,
+              'soundexes_bow': 0.5,
+          },
+          'ml' : { 
+              'emoji_sentiment': 0.6,
+              'emojis': 0.8, #higher value seems to improve negative ratings
+              'review_bow': 0.0,
+              'review_ngram': 1.0,
+              'lang_tag': 0.7,
+              'len_range': 0.5,
+              'soundexes_bow': 0.5,
+          }
+      }
+    return lang_weights[lang]
+
 def get_pipeline(lang = 'ta', datalen = 1000):
 
-    if lang == 'ta':
-        chosen_weights={ 
-            'emoji_sentiment': 0.6,
-            'emojis': 0.8, #higher value seems to improve negative ratings
-            'review_bow': 0,
-            'review_ngram': 1.0,
-            'lang_tag': 0.6,
-            'len_range': 0.0,
-            'soundexes_bow': 0.0,
-        }
-
-    if lang == 'ml':
-        chosen_weights={ 
-            'emoji_sentiment': 0.6,
-            'emojis': 0.8, #higher value seems to improve negative ratings
-            'review_bow': 0.0,
-            'review_ngram': 1.0,
-            'lang_tag': 0.7,
-            'len_range': 0.5,
-            'soundexes_bow': 0.5,
-        }
+    chosen_weights = get_transformer_weights(lang)
+    print(chosen_weights)
 
     """ distributions = dict(
         penalty=['l1', 'l2', 'elasticnet'],
@@ -358,9 +358,7 @@ def get_pipeline(lang = 'ta', datalen = 1000):
         )),
 
         # Use an SVC/SGD classifier on the combined features
-        #('svc', SVC(kernel='linear')),
         #the value for max_iter(np.ceil(10**6/datalen)) is based on suggestion here - https://scikit-learn.org/stable/modules/sgd.html#tips-on-practical-use
-        # This is best configuration for Tamil
         #('sgd', SGDClassifier(loss="modified_huber", penalty="elasticnet", max_iter=np.ceil(10**6/datalen), random_state=0, alpha = 0.0001)),
         ('sgd', SGDClassifier(loss="modified_huber", penalty="elasticnet", max_iter=np.ceil(10**6/datalen), random_state=0, alpha = 0.0001)),
         # ('rsrch', RandomizedSearchCV(estimator=clf, param_distributions=distributions, cv=5, n_iter=5)),

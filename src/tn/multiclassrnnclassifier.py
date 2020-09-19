@@ -1,9 +1,11 @@
 """
+@author sanjeethr, oligoglot
 Thanks to Susan Li for this step by step guide: https://towardsdatascience.com/multi-class-text-classification-with-lstm-1590bee1bd17
 """
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import sys, os
 
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
@@ -17,12 +19,11 @@ from sklearn.preprocessing import LabelBinarizer
 
 from libindic.soundex import Soundex
 
-import sys
-# Appeding our src directory to sys path so that we can import modules.
-sys.path.append('../..')
-from src.playground.feature_utils import get_emojis_from_text, get_doc_len_range
-sys.path.append('../../src/extern/indic_nlp_library/')
-from src.extern.indic_nlp_library.indicnlp.normalize.indic_normalize import BaseNormalizer
+
+
+from lib.feature_utils import load_docs, get_emojis_from_text, get_doc_len_range
+sys.path.append(os.path.join(os.path.dirname(sys.path[0]),'extern', 'indic_nlp_library'))
+from indicnlp.normalize.indic_normalize import BaseNormalizer
 try:
     from indictrans import Transliterator
 except ImportError:

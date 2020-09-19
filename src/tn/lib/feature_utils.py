@@ -5,10 +5,8 @@ from googletrans import Translator
 from langdetect import detect
 import math
 from bisect import bisect_left
-# Appeding our src directory to sys path so that we can import modules.
-sys.path.append(os.path.join(os.path.dirname(sys.path[0]),'lib'))
-print(sys.path)
-from sentimoji import get_emoji_sentiment_rank
+
+from .sentimoji import get_emoji_sentiment_rank
 
 def load_docs(source, mode='train'):
     documents = {'data': [], 'target_names': [], 'ids': []}
