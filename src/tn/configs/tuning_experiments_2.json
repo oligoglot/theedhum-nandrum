@@ -1,0 +1,14 @@
+{
+  "union__transformer_weights" : [{ "emoji_sentiment": 0.6, "emojis": 0.8, "review_bow": 0.0, "review_ngram": 1.0, "lang_tag": 0.1, "len_range":0.5, "soundexes_bow":0.0},
+    { "emoji_sentiment": 0.6, "emojis": 0.8, "review_bow": 0.0, "review_ngram": 1.0, "lang_tag": 0.1,  "soundexes_bow":0.1},
+    { "emoji_sentiment": 0.6, "emojis": 0.8, "review_bow": 0.0, "review_ngram": 1.0, "lang_tag": 0.1,  "soundexes_bow":0.2},
+    { "emoji_sentiment": 0.6, "emojis": 0.8, "review_bow": 0.0, "review_ngram": 1.0, "lang_tag": 0.1,  "soundexes_bow":0.3},
+    { "emoji_sentiment": 0.6, "emojis": 0.8, "review_bow": 0.0, "review_ngram": 1.0, "lang_tag": 0.1,  "soundexes_bow":0.4},
+    { "emoji_sentiment": 0.6, "emojis": 0.8, "review_bow": 0.0, "review_ngram": 1.0, "lang_tag": 0.1,  "soundexes_bow":0.5},
+    { "emoji_sentiment": 0.6, "emojis": 0.8, "review_bow": 0.0, "review_ngram": 1.0, "lang_tag": 0.1,  "soundexes_bow":0.6},
+    { "emoji_sentiment": 0.6, "emojis": 0.8, "review_bow": 0.0, "review_ngram": 1.0, "lang_tag": 0.1,  "soundexes_bow":0.7},
+    { "emoji_sentiment": 0.6, "emojis": 0.8, "review_bow": 0.0, "review_ngram": 1.0, "lang_tag": 0.1,  "soundexes_bow":0.8},
+    { "emoji_sentiment": 0.6, "emojis": 0.8, "review_bow": 0.0, "review_ngram": 1.0, "lang_tag": 0.1,  "soundexes_bow":0.9}
+
+]
+}

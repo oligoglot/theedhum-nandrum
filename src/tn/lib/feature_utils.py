@@ -1,13 +1,14 @@
 from emoji import UNICODE_EMOJI
 import re
-import sys
+import sys, os
 from googletrans import Translator
 from langdetect import detect
 import math
 from bisect import bisect_left
 # Appeding our src directory to sys path so that we can import modules.
-sys.path.append('../..')
-from  src.tn.lib.sentimoji import get_emoji_sentiment_rank
+sys.path.append(os.path.join(os.path.dirname(sys.path[0]),'lib'))
+print(sys.path)
+from sentimoji import get_emoji_sentiment_rank
 
 def load_docs(source, mode='train'):
     documents = {'data': [], 'target_names': [], 'ids': []}
@@ -124,4 +125,4 @@ if __name__ == "__main__":
     # document_emoji_feature(document_words, features)
     # print(features)
     # detect_lang_and_store(["idhu enna maayam", "sundari kannaal oru sedhi", "malalayali aano", "கலக்கல்", "nandri hai"], "/tmp/languages_tmp.tsv")
-    detect_lang_and_store('../../resources/data/alltexts.txt', '../../resources/data/alltextslang.txt')
+    detect_lang_and_store(os.path.join(os.path.dirname(sys.path[0]),'../../resources/data/alltexts.txt'), os.path.join(os.path.dirname(sys.path[0]),'../../resources/data/alltextslang.txt'))
