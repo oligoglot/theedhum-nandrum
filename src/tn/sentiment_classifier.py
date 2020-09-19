@@ -1,6 +1,5 @@
 """
 @author sanjeethr, oligoglot
-Borrows from https://scikit-learn.org/0.18/auto_examples/hetero_feature_union.html
 
 Implements SGDClassifier using FeatureUnions for Sentiment Classification of text
 It also has code to experiment with hyper tuning parameters of the classifier
@@ -29,9 +28,7 @@ from sklearn.model_selection import GridSearchCV
 from libindic.soundex import Soundex
 
 
-# Appeding our src directory to sys path so that we can import modules.
 from lib.feature_utils import load_docs, get_emojis_from_text, get_doc_len_range
-# sys.path.append('../extern/indic_nlp_library/')
 sys.path.append(os.path.join(os.path.dirname(sys.path[0]),'extern', 'indic_nlp_library'))
 from indicnlp.normalize.indic_normalize import BaseNormalizer
 sys.path.append(os.path.join(os.path.dirname(sys.path[0]),'extern'))
@@ -209,8 +206,9 @@ def fit_predict_measure(mode, train_file, test_file, inputfile, lang = 'ta'):
                 outf.write('\t'.join((idx, review, label)) + '\n')
         print(f'predict data written to theedhumnandrum_{lang}.tsv')
 
+
 # Perform tuning of hyper parameters by passing in the field you want to
-# tune as a json
+# tune as a json input file. You can find sample files in the config directory
 def perform_hyper_param_tuning(data_train, data_test, input_file, lang = 'ta'):
   pipeline = get_pipeline(lang, len(data_train['data']))
   # parameters = {
@@ -252,6 +250,8 @@ def perform_hyper_param_tuning(data_train, data_test, input_file, lang = 'ta'):
   print(classification_report(y_true, y_pred))
   print()
 
+# Get the tranformer weights for a language. Use the experiment mode of the script
+# to find the right hypertuning parameters
 def get_transformer_weights(lang = 'ta'):
     lang_weights = {
       'ta' : { 
@@ -275,6 +275,8 @@ def get_transformer_weights(lang = 'ta'):
       }
     return lang_weights[lang]
 
+# The core function that returns the Pipeline. This is a FeatureUnion of
+# a SGD Classifier. Borrows from https://scikit-learn.org/0.18/auto_examples/hetero_feature_union.html
 def get_pipeline(lang = 'ta', datalen = 1000):
 
     chosen_weights = get_transformer_weights(lang)
@@ -293,7 +295,7 @@ def get_pipeline(lang = 'ta', datalen = 1000):
         ('union', FeatureUnion(
             transformer_list=[
 
-                # Pipeline for standard bag-of-words model for review
+                # Pipeline for emojis handled like a bag of words
                 ('emojis', Pipeline([
                     ('selector', ItemSelector(key='emojis')),
                     ('tfidf', TfidfVectorizer(token_pattern=r'[^\s]+', stop_words=None, max_df=0.4, min_df=2, max_features=10)),
@@ -336,7 +338,7 @@ def get_pipeline(lang = 'ta', datalen = 1000):
                     ('vect', DictVectorizer()),  # list of dicts -> feature matrix
                 ])),
 
-                # Pipeline for standard bag-of-words model for review
+                # Pipeline for ngram model for review
                 ('review_ngram', Pipeline([
                     ('selector', ItemSelector(key='review')),
                     #tamil - best config 
