@@ -16,11 +16,18 @@ A sentiment classifier on mixed language (and mixed script) reviews in Tamil, Ma
 * `source venv_tn/bin/activate`
 * `pip install -r requirements.txt `
 
-## How to run playground files
+## Running the classification scripts
+----------------
 * You need to activate the virtualenv
     * `source venv_tn/bin/activate`
-* `cd src/playground`
-* `python classify.py`
+* `cd src/tn`
+* Hyper Parameter Tuning for SGD Classifier
+   * `python3 sentiment_classifier.py experiment ta ../../resources/data/tamil_train.tsv ../../resources/data/tamil_dev.tsv configs/tuning_experiments_1.json`
+* Classification for Tamil Input Set
+  * `python3 sentiment_classifier.py test ta ../../resources/data/tamil_train.tsv ../../resources/data/tamil_dev.tsv <output File>`
+* Classification for Malayalam Input Set
+  * `python3 sentiment_classifier.py test ml ../../resources/data/malayalam_train.tsv ../../resources/data/malayalam_dev.tsv <output File>`
+
 
 # Steps
 ## Pre-processing
