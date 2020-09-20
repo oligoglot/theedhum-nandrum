@@ -1,5 +1,6 @@
 # theedhum-nandrum (தீதும் நன்றும்)
 A sentiment classifier on mixed language (and mixed script) reviews in Tamil, Malayalam and English
+![Image of TheedhumNandrum](https://raw.githubusercontent.com/oligoglot/theedhum-nandrum/3d3e3f2ad236b74e7917c956f819c7316f3bc690/t-n.png)
 
 ## Installation
 ## Pre-requisites
