@@ -1,0 +1,4 @@
+* Theedhum Nandrum code contributors as of September 2020: Sanjeeth Kumar, BalaSundaraRaman L and Ishwar Sridharan.
+* We've cited the open source software used in this repo in our paper to be published in FIRE 2020. We've also indicated inline in code comments where possible.
+* External repos are organised under src/extern, but some of the derived scripts are under src/tn/lib.
+* Our logo was designed by Tharique Azeez (https://thariqueazeez.com/).
