@@ -100,6 +100,8 @@ class FeatureExtractor(BaseEstimator, TransformerMixin):
     def __init__(self, lang = 'ta'):
         self.lang = lang
         self.normalizer = BaseNormalizer(lang)
+        # This language map was created using Google's googletrans module. Create the file alltextlang.txt by calling
+        # detect_lang_and_store in feature_utils.py
         self.lmap = self.load_language_maps( os.path.join(os.path.dirname(sys.path[0]),'../resources/data/alltextslang.txt'))
         self.soundexer = Soundex()
         self.ta_trans = Transliterator(source='eng', target='tam', build_lookup=True)
@@ -360,8 +362,8 @@ def get_pipeline(lang = 'ta', datalen = 1000):
         )),
 
         # Use an SVC/SGD classifier on the combined features
-        #the value for max_iter(np.ceil(10**6/datalen)) is based on suggestion here - https://scikit-learn.org/stable/modules/sgd.html#tips-on-practical-use
-        #('sgd', SGDClassifier(loss="modified_huber", penalty="elasticnet", max_iter=np.ceil(10**6/datalen), random_state=0, alpha = 0.0001)),
+        # the value for max_iter(np.ceil(10**6/datalen)) is based on suggestion here - https://scikit-learn.org/stable/modules/sgd.html#tips-on-practical-use
+        # ('sgd', SGDClassifier(loss="modified_huber", penalty="elasticnet", max_iter=np.ceil(10**6/datalen), random_state=0, alpha = 0.0001)),
         ('sgd', SGDClassifier(loss="modified_huber", penalty="elasticnet", max_iter=np.ceil(10**6/datalen), random_state=0, alpha = 0.0001)),
         # ('rsrch', RandomizedSearchCV(estimator=clf, param_distributions=distributions, cv=5, n_iter=5)),
     ])
