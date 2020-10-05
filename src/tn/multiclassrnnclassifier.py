@@ -16,6 +16,7 @@ from keras.callbacks import EarlyStopping
 from keras.optimizers import Adam
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
+from sklearn.metrics import classification_report
 
 from libindic.soundex import Soundex
 
@@ -33,7 +34,7 @@ ta_trans = Transliterator(source='eng', target='tam', build_lookup=True)
 ml_trans = Transliterator(source='eng', target='mal', build_lookup=True)
 # The maximum number of words to be used. (most frequent)
 MAX_NB_WORDS = 50000
-# Max number of words in each complaint.
+# Max number of words in each review.
 MAX_SEQUENCE_LENGTH = 150
 # This is fixed.
 EMBEDDING_DIM = 100
@@ -141,8 +142,13 @@ if lang == 'ml':
 
 history = model.fit(X_train, Y_train, epochs=epochs, batch_size=batch_size,validation_split=0.1,callbacks=[EarlyStopping(monitor='val_loss', patience=3, min_delta=0.0001)])
 
-accr = model.evaluate(X_test,Y_test)
-print('Test set\n  Loss: {:0.3f}\n  Accuracy: {:0.3f}'.format(accr[0],accr[1]))
+# accr = model.evaluate(X_test,Y_test)
+# print('Test set\n  Loss: {:0.3f}\n  Accuracy: {:0.3f}'.format(accr[0],accr[1]))
+
+Y_test_idx = np.argmax(Y_test, axis=1) # Convert one-hot to index
+Y_pred = model.predict_classes(X_test)
+print(classification_report(Y_test_idx, Y_pred))
+
 
 new_review = ['Thalaiva superstar Rajinikanth number one mass Hero']
 seq = tokenizer.texts_to_sequences(new_review)
