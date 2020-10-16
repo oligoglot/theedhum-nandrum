@@ -1,5 +1,15 @@
 # theedhum-nandrum (தீதும் நன்றும்)
-A sentiment classifier on mixed language (and mixed script) reviews in Tamil, Malayalam and English
+A sentiment classifier on mixed language (and mixed script) reviews in Tamil, Malayalam and English. You can read our paper describing the approach at https://arxiv.org/abs/2010.03189. Please cite our paper if you are using this.
+
+@misc{lakshmanan2020theedhum,
+      title={Theedhum Nandrum@Dravidian-CodeMix-FIRE2020: A Sentiment Polarity Classifier for YouTube Comments with Code-switching between Tamil, Malayalam and English}, 
+      author={BalaSundaraRaman Lakshmanan and Sanjeeth Kumar Ravindranath},
+      year={2020},
+      eprint={2010.03189},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL}
+}
+
 ![Image of TheedhumNandrum](https://raw.githubusercontent.com/oligoglot/theedhum-nandrum/3d3e3f2ad236b74e7917c956f819c7316f3bc690/t-n.png)
 
 ## Installation
