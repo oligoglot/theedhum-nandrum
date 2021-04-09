@@ -2,3 +2,4 @@
 * We've cited the open source software used in this repo in our paper to be published in FIRE 2020. We've also indicated inline in code comments where possible.
 * External repos are organised under src/extern, but some of the derived scripts are under src/tn/lib.
 * Our logo was designed by Tharique Azeez (https://thariqueazeez.com/).
+* The datasets are from Bharathi Raja et al. https://www.aclweb.org/anthology/2020.sltu-1.28.pdf & https://www.aclweb.org/anthology/2020.sltu-1.25.pdf
